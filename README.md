@@ -6,6 +6,8 @@ Resources include:
 - <https://vallierlab.wixsite.com/pipelines/rna-seq>
 - [RNA-seq workflow: gene-level exploratory analysis and differential expression by Love et al. 2019](http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#running-the-differential-expression-pipeline)
 
+The pipeline covers the following steps:
+
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
 - [Alignment](#alignment)
 - [Post-alignment QC](#post-alignment-qc)
@@ -13,7 +15,11 @@ Resources include:
 
 ## Pre-alignment QC
 
-FastQC report.
+The raw sequence data should first be assessed for quality. FastQC reports can be generated for all samples to assess sequence quality, GC content, duplication rates, length distribution, K-mer content and adapter contamination. In ATAC-seq data, it is likely that Nextera sequencing adapters will be over-represented. As described by (Yan et al. 2020), base quality should be high although may drop slightly at the 3' end, while GC content and read length should be consistent with the expected values. For paired-end reads, run fastqc on both files, with the results output to the current directory:
+
+fastqc <sample>_1.fastq.gz -d . -o .
+
+fastqc <sample>_2.fastq.gz -d . -o .
 
 Adapter trimming using cutadapt. Other tools  include trimmomatic and fastp. 
 

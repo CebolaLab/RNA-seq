@@ -1,6 +1,8 @@
 # RNA-seq
 Step-by-step analysis pipeline for RNA-seq data
 
+[Cebola Lab](https://www.imperial.ac.uk/metabolism-digestion-reproduction/research/systems-medicine/genetics--genomics/regulatory-genomics-and-metabolic-disease/)
+
 Resources include: 
 
 - <https://vallierlab.wixsite.com/pipelines/rna-seq>

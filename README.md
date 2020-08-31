@@ -51,31 +51,48 @@ GENOMEDIR=/path/to/indexed/genome
 STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile ENCFF159KBI.gtf --sjdbOverhang: readlength -1
 ```
 
-STAR can then be run to align the fastq data files to the genome:
-
+STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, add the `--readFilesCommand zcat` argument. 
 
 ```
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> | samtools view -bS sort -c 
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --outSAMtype BAM SortedByCoordinate
 ```
 
 ### Merge files
 
 At this stage, if samples have been sequenced across multiple lanes, the samples files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects. 
 
-### Sort and index 
-
-The output `bam` files should be sorted and indexed:
-
-```
-picard SortSam I=<sample>.bam O=<sample>-sorted.bam SO=coordinate CREATE_INDEX=TRUE
-```
-
-
 ## Post-alignment QC
 
-Check the expected mapping to exons, introns etc.
+The post-alignment QC steps involve several steps:
 
-Remove duplicates? 
+- Remove mitochondrial reads
+- Remove duplicates & low-quality alignments (including non-uniquely mapped reads)
+- Check the expected mapping to exons, introns etc.
+
+### 
+
+Remove mitochondrial reads. To assess the total % of mitochondrial reads, samtools idxstats can be run to report the total number of reads mapping to each chromosome. samtools flagstat provides a short report including the total number of DNA fragments.
+
+```
+samtools idxstats <sample>_sorted.bam > <sample>_sorted.idxstats
+
+grep "chrM" <sample>_sorted.idxstats
+```
+
+The second column is the length of the chromosome and the third column is the total number of reads aligned to the chromosome (chrM). To see the total number of DNA fragments, run:
+
+```
+samtools flagstat <sample>_sorted.bam > <sample>_sorted.flagstat
+
+head <sample>_sorted.flagstat
+```
+
+The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA fragments. To remove any mitocondrial DNA, run the following:
+
+
+```
+samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
+```
 
 ## Visualisation 
 

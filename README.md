@@ -80,23 +80,21 @@ The post-alignment QC steps involve several steps:
 
 #### Remove mitochondrial reads
 
-Remove mitochondrial reads. To assess the total % of mitochondrial reads, samtools idxstats can be run to report the total number of reads mapping to each chromosome. samtools flagstat provides a short report including the total number of DNA fragments.
+Remove mitochondrial reads. To assess the total % of mitochondrial reads, in an unsorted bam file, run:
 
 ```
-samtools idxstats <sample>_sorted.bam > <sample>_sorted.idxstats
-
-grep "chrM" <sample>_sorted.idxstats
+samtools view <sample>.bam | grep chrM | wc -l 
 ```
 
-The second column is the length of the chromosome and the third column is the total number of reads aligned to the chromosome (chrM). To see the total number of DNA fragments, run:
+To see the total number of DNA fragments, run:
 
 ```
-samtools flagstat <sample>_sorted.bam > <sample>_sorted.flagstat
+samtools flagstat <sample>.bam > <sample>.flagstat
 
-head <sample>_sorted.flagstat
+cat <sample>_sorted.flagstat
 ```
 
-The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA fragments. To remove any mitocondrial DNA, run the following:
+The first line shows the total number of DNA fragments. The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA fragments. To remove any mitocondrial DNA, run the following:
 
 
 ```
@@ -122,10 +120,10 @@ samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
 
 #### Remove flagged reads 
 
-If paired-end sequencing has been used, the aligned `bam` file can be filtered for properly mapped pairs (-f 2). For both single and paired-end reads, reads can be removed if they fail the platform/vendor QC checks (-F 512) or if they are unmapped (-F 12). (Duplicate reads can also be removed in this step using the flag -F 1024). The user can select their own combination, for example:
+If paired-end sequencing has been used, the aligned `bam` file can be filtered for properly mapped pairs (-f 2). For both single and paired-end reads, reads can be removed if they fail the platform/vendor QC checks (-F 512) or if they are unmapped (-F 12). (Duplicate reads can also be removed in this step using the flag -F 1024). The user can select their own combination, for example (run it on either the <sample>.rmChrM.bam or <sample>.rmDup.bam.
 
 ```
-samtools view -h -b -F 512 -F 12 <sample>.rmChrM.bam
+samtools view -h -b -F 512 -F 12 <sample>.bam > sample-filtered.bam
 ```
 
 ## Visualisation 

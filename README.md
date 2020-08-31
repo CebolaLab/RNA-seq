@@ -106,8 +106,7 @@ picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marke
 head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
 ```
 
-Remove duplicate reads [optional]
-It may be recommended to remove duplicate reads if the % of duplicates is high. To remove duplicate reads, run the following code:
+*Optional*: It may be recommended to remove duplicate reads if the % of duplicates is high. To remove duplicate reads, run the following code:
 
 ```
 samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam

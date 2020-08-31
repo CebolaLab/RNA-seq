@@ -81,7 +81,7 @@ The post-alignment QC steps involve several steps:
 - [Remove duplicates & low-quality alignments](#tag-and-remove-duplicates-and-low-quality-alignments) (including non-uniquely mapped reads)
 - Check the expected mapping to exons, introns etc.
 
-#### Remove mitochondrial reads
+> Remove mitochondrial reads
 
 Remove mitochondrial reads. To assess the total % of mitochondrial reads, samtools idxstats can be run to report the total number of reads mapping to each chromosome. samtools flagstat provides a short report including the total number of DNA fragments.
 
@@ -106,6 +106,41 @@ The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
 
+> Tag and remove duplicates [optional]
+
+
+The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). Duplicate reads can be marked and the % of duplicate reads viewed using:
+
+```
+picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marked.bam METRICS_FILE=<sample>.sorted.metrics REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=.
+
+head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
+```
+
+*Optional*: It may be recommended to remove duplicate reads if the % of duplicates is high. To remove duplicate reads, run the following code:
+
+```
+samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
+```
+
+> Remove flagged reads 
+
+If paired-end sequencing has been used, the aligned `bam` file can be filtered for properly mapped pairs (-f 2). For both single and paired-end reads, reads can be removed if they fail the platform/vendor QC checks (-F 512) or if they are unmapped (-F 12). (Duplicate reads can also be removed in this step using the flag -F 1024). The user can select their own combination, for example:
+
+```
+samtools view -h -b -F 512 -F 12 <sample>.rmChrM.bam
+```
+
+## Visualisation 
+
+The QC-ed `bam`	file can be converted to a `bedGraph` format to	visualise sequencing trakcs using tools	such as	the UCSC browser \
+or the integrative genomes browser. The	ENCODE blacklist regions can be	provided, to exclude them from the output:
+
+```
+bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filtered.bam > <sample>.bedGraph
+```
+
+
 
 #### Quantify
 
@@ -120,50 +155,6 @@ salmon quant -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon
 
 ### Visualise 
 
-
-
-
-
-### Tag and remove duplicates and low-quality alignments
-
-
-
-
-In this pipeline, RNA-seq data was aligned to the reference genome using the splice-aware aligner, STAR. 
-
-The approached to deal with multi-mapped reads are shown below, reproduced from [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032) Figure 3.
-
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multi-mapped-reads.png" width="500">
-
-(A) Example of two genes sharing a duplicated sequence and the distribution of RNA-seq reads originating from them. The two genes are represented by boxes outlined by dashed lines and their common sequence is illutrated by a red line. The reads are represented by lines above the genes, purple for reads that are unique to Gene 1, orange for reads that are unique to Gene 2 and black for reads that are common to genes 1 and 2. (B) General classes to handle multi- mapped reads include ignoring them, counting them once per alignment, splitting them equally between the alignments, rescuing the reads based on uniquely mapped reads of the gene, expectation–maximization approaches, rescuing methods based on read coverage in flanking regions and clustering methods that group together genes/transcripts with shared sequences [(Deschamps-Francoeur et al. 2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032).
-
-
-> Duplicate reads
-
-The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). 
-
-Duplicate reads can be marked and the % of duplicate reads viewed using:
-
-```
-picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marked.bam METRICS_FILE=<sample>.sorted.metrics REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=.
-
-head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
-```
-
-*Optional*: It may be recommended to remove duplicate reads if the % of duplicates is high. To remove duplicate reads, run the following code:
-
-```
-samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
-```
-
-## Visualisation 
-
-The QC-ed `bam`	file can be converted to a `bedGraph` format to	visualise sequencing trakcs using tools	such as	the UCSC browser \
-or the integrative genomes browser. The	ENCODE blacklist regions can be	provided, to exclude them from the output:
-
-```
-bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filtered.bam > <sample>.bedGraph
-```
 
 
 UCSC binaries bedGraph to BigWig?

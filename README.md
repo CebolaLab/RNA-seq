@@ -98,15 +98,11 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 
 > Duplicate reads
 
-The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below).
+The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). Duplicate reads can be marked and the % of duplicate reads viewed using:
 
 ```
 picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marked.bam METRICS_FILE=<sample>.sorted.metrics REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=.
-```
 
-The % of duplicates can be viewed using:
-
-```
 head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
 ```
 

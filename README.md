@@ -39,17 +39,15 @@ A html report is generated, including the following information:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/fastp-summary.png" width="600">
 
-## Align and quantify
-
 For this RNA-seq pipeline, the steps include:
 
 - [Align to the reference human genome](#align-to-the-reference-genome)
 - [Post-alignment QC](#post-alignment-qc)
-- [Quantify transcripts](#quantify)
 - [Visualise tracks against the reference genome](#visualise)
+- [Quantify transcripts](#quantify)
 
 
-### Align to the reference genome
+## Align to the reference genome
 
 The filtered DNA reads must next be aligned to the reference genome. For RNA-seq data, a splice-aware aligner such as STAR or TopHat should be used. Here, [STAR](https://github.com/alexdobin/STAR) is used. The manual is available [here](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf). The reference genome used is the GRCh38 'no-alt' assembly from ncbi, recommended by [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use). The genome can be downloaded at [this link](ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz).  This version of the recent GRCh38 reference genome excludes alternative contigs which may cause fragments to map in multiple locations. The downloaded genome should be indexed with STAR. Other sources recommend the Ensembl [Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz](ftp://ftp.ensembl.org/pub/release-77/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz), however [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use) notes that this version of the genome includes multi-placed sequences such as the pseudo-autosomal regions on both chromosomes Z and Y, as well as some alpha satellites. 
 
@@ -61,10 +59,10 @@ GENOMEDIR=/path/to/indexed/genome
 STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile ENCFF159KBI.gtf --sjdbOverhang readlength -1
 ```
 
-STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. 
+STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should *not* be sorted, since the quantification step using Salmon required unsorted files.
 
 ```
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted
 ```
 
 #### Merge files [optional]
@@ -72,8 +70,7 @@ STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <s
 At this stage, if samples have been sequenced across multiple lanes, the samples files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to ber merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, merge the `bam` files at this stage. 
 
 
-
-### Post-alignment QC
+## Post-alignment QC
 
 The post-alignment QC steps involve several steps:
 
@@ -81,7 +78,7 @@ The post-alignment QC steps involve several steps:
 - [Remove duplicates & low-quality alignments](#tag-and-remove-duplicates-and-low-quality-alignments) (including non-uniquely mapped reads)
 - Check the expected mapping to exons, introns etc.
 
-> Remove mitochondrial reads
+#### Remove mitochondrial reads
 
 Remove mitochondrial reads. To assess the total % of mitochondrial reads, samtools idxstats can be run to report the total number of reads mapping to each chromosome. samtools flagstat provides a short report including the total number of DNA fragments.
 
@@ -106,7 +103,7 @@ The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
 
-> Tag and remove duplicates [optional]
+#### Tag and remove duplicates [optional]
 
 
 The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). Duplicate reads can be marked and the % of duplicate reads viewed using:
@@ -123,7 +120,7 @@ head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
 samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
 ```
 
-> Remove flagged reads 
+#### Remove flagged reads 
 
 If paired-end sequencing has been used, the aligned `bam` file can be filtered for properly mapped pairs (-f 2). For both single and paired-end reads, reads can be removed if they fail the platform/vendor QC checks (-F 512) or if they are unmapped (-F 12). (Duplicate reads can also be removed in this step using the flag -F 1024). The user can select their own combination, for example:
 
@@ -141,8 +138,7 @@ bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filter
 ```
 
 
-
-#### Quantify
+## Quantify
 
 The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
 

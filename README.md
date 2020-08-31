@@ -96,9 +96,22 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 
 ### Tag and remove duplicates and low-quality alignments
 
+
+> Multi-mapping reads
+
+**Multi-mapped reads**: these are defined as reads which can map in more than one location in the reference genome. A recent publication reviewing the handling of multi-mapping reads in RNA-seq data is reported by [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032). As described by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), there are many mechanisms which can lead to the duplication of coding sequences and different classes of RNAs have different levels of sequence similarity across the genome. For this reason, the analysis steps for analysing different classes of RNA (e.g. coding genes vs short RNAs) may be different. The abundance of each class of RNA (e.g. mRNA, lncRNA, snRNA, miRNA, rRNA, snoRNA) will differ depending on the study protocol, for example whether there was poly-A or size-based selection included during the library preparation. 
+
+In this pipeline, RNA-seq data is aligned to the reference genome. In alternative pipelines, where the data is aligned to the reference *transcriptome*, multiple isoforms of a gene may cause reads to align to multiple 'positions' in the reference.
+
+The approached to deal with multi-mapped reads are shown below, reproduced from [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032) Figure 3.
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multi-mapped-reads.png" width="600">
+
 > Duplicate reads
 
-The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). Duplicate reads can be marked and the % of duplicate reads viewed using:
+The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). 
+
+Duplicate reads can be marked and the % of duplicate reads viewed using:
 
 ```
 picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marked.bam METRICS_FILE=<sample>.sorted.metrics REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=.
@@ -111,10 +124,6 @@ head -n 8 <sample>-markDup.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
 ```
 samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
 ```
-
-> Multi-mapping reads
-
-**Multi-mapped reads**: these are defined as reads which can map in more than one location in the reference genome. A recent publication reviewing the handling of multi-mapping reads in RNA-seq data is reported by [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032).
 
 ## Visualisation 
 

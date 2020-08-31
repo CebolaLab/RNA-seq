@@ -105,7 +105,10 @@ In this pipeline, RNA-seq data is aligned to the reference genome. In alternativ
 
 The approached to deal with multi-mapped reads are shown below, reproduced from [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032) Figure 3.
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multi-mapped-reads.png" width="600">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multi-mapped-reads.png" width="500">
+
+(A) Example of two genes sharing a duplicated sequence and the distribution of RNA-seq reads originating from them. The two genes are represented by boxes outlined by dashed lines and their common sequence is illutrated by a red line. The reads are represented by lines above the genes, purple for reads that are unique to Gene 1, orange for reads that are unique to Gene 2 and black for reads that are common to genes 1 and 2. (B) General classes to handle multi- mapped reads include ignoring them, counting them once per alignment, splitting them equally between the alignments, rescuing the reads based on uniquely mapped reads of the gene, expectation–maximization approaches, rescuing methods based on read coverage in flanking regions and clustering methods that group together genes/transcripts with shared sequences [(Deschamps-Francoeur et al. 2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032).
+
 
 > Duplicate reads
 

@@ -58,40 +58,30 @@ Set --sjdbOverhang to your maximum read length -1. The indexing also requires a 
 ```
 GENOMEDIR=/path/to/indexed/genome
 
-STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile ENCFF159KBI.gtf --sjdbOverhang: readlength -1
+STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile ENCFF159KBI.gtf --sjdbOverhang readlength -1
 ```
 
-STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, add the `--readFilesCommand zcat` argument. 
+STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. 
 
 ```
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --outSAMtype BAM SortedByCoordinate
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM SortedByCoordinate
 ```
+
+> Merge files [optional]
+
+At this stage, if samples have been sequenced across multiple lanes, the samples files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to ber merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, merge the `bam` files at this stage. 
 
 > Quantify
 
-The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs. (Notably, Ensembl also includes predicted transcripts).
+The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
 
-The benefits of using Salmon are that it uses an expectation minimisation (EM) approach to quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. As described by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts 
-
-
-
-
- For this reason, the analysis steps will be different if (1) aligning to the reference transcriptome, rather than the reference genome or (2) if analysing different classes of RNA (e.g. short RNAs of miRNAs), since sequence similarity levels are higher across the genome. The abundance of each class of RNA (e.g. mRNA, lncRNA, snRNA, miRNA, rRNA, snoRNA) will differ depending on the study protocol and focus, for example whether there was poly-A or size-based selection included during the library preparation. 
-
+The benefits of using Salmon are that it uses an expectation minimisation (EM) approach to quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
+s
 
 ```
-salmon quant -i gencode.v35.transcripts_index
-
-
- -l A \
-         -1 ${fn}/${samp}_1.fastq.gz \
-         -2 ${fn}/${samp}_2.fastq.gz \
-         -p 8 --validateMappings -o quants/${samp}_quant
+salmon quant -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
 ```
 
-### Merge files
-
-At this stage, if samples have been sequenced across multiple lanes, the samples files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`.
 
 ## Post-alignment QC
 

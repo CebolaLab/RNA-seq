@@ -43,13 +43,13 @@ A html report is generated, including the following information:
 
 For this RNA-seq pipeline, the steps include:
 
-- [Align to the reference human genome (GRCh38) using STAR](#align-to-the-reference-genome-(grch38))
-- Input the aligned `sam/bam` file into Salmon for quantification against the reference transcriptome 
-- Convert `bam` to `bedGraph`, normalise and visualise against the reference genome
+- [Align to the reference human genome](#align-to-the-reference-genome)
+- [Post-alignment QC](#post-alignment-qc)
+- [Quantify transcripts](#quantify)
+- [Visualise tracks against the reference genome](#visualise)
 
 
-### Align to the reference genome (GRCh38)
-
+### Align to the reference genome
 
 The filtered DNA reads must next be aligned to the reference genome. For RNA-seq data, a splice-aware aligner such as STAR or TopHat should be used. Here, [STAR](https://github.com/alexdobin/STAR) is used. The manual is available [here](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf). The reference genome used is the GRCh38 'no-alt' assembly from ncbi, recommended by [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use). The genome can be downloaded at [this link](ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz).  This version of the recent GRCh38 reference genome excludes alternative contigs which may cause fragments to map in multiple locations. The downloaded genome should be indexed with STAR. Other sources recommend the Ensembl [Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz](ftp://ftp.ensembl.org/pub/release-77/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz), however [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use) notes that this version of the genome includes multi-placed sequences such as the pseudo-autosomal regions on both chromosomes Z and Y, as well as some alpha satellites. 
 
@@ -71,19 +71,9 @@ STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <s
 
 At this stage, if samples have been sequenced across multiple lanes, the samples files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to ber merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, merge the `bam` files at this stage. 
 
-#### Quantify
-
-The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
-
-The benefits of using Salmon are that it uses an expectation minimisation (EM) approach to quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
-s
-
-```
-salmon quant -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
-```
 
 
-## Post-alignment QC
+### Post-alignment QC
 
 The post-alignment QC steps involve several steps:
 
@@ -91,7 +81,7 @@ The post-alignment QC steps involve several steps:
 - [Remove duplicates & low-quality alignments](#tag-and-remove-duplicates-and-low-quality-alignments) (including non-uniquely mapped reads)
 - Check the expected mapping to exons, introns etc.
 
-### Remove mitochondrial reads
+#### Remove mitochondrial reads
 
 Remove mitochondrial reads. To assess the total % of mitochondrial reads, samtools idxstats can be run to report the total number of reads mapping to each chromosome. samtools flagstat provides a short report including the total number of DNA fragments.
 
@@ -115,6 +105,24 @@ The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA
 ```
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
+
+
+#### Quantify
+
+The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
+
+The benefits of using Salmon are that it uses an expectation minimisation (EM) approach to quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
+s
+
+```
+salmon quant -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
+```
+
+### Visualise 
+
+
+
+
 
 ### Tag and remove duplicates and low-quality alignments
 

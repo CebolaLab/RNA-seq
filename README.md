@@ -66,7 +66,7 @@ STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFast
 
 > Carry out the alignment
 
-STAR can then be run to align the fastq data files to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should *not* be sorted, since the quantification step using Salmon required unsorted files. The following options are shown according to the ENCODE recommendations. For single-end data:
+STAR can then be run to align the `fastq` raw data to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should be unsorted, as required for the downstream quantification step using Salmon. The following options are shown according to the ENCODE recommendations. For single-end data:
 
 ```
 STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>.fastq.gz --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend
@@ -142,38 +142,21 @@ samtools view -h -b -F 512 -F 12 <sample>.bam > sample-filtered.bam
 
 ## Visualisation 
 
-The QC-ed `bam`	file can be converted to a `bedGraph` format to	visualise sequencing trakcs using tools	such as	the UCSC browser \
-or the integrative genomes browser. The	ENCODE blacklist regions can be	provided, to exclude them from the output:
+The QC-ed `bam`	file, aligned to the *reference genome* can be converted to a `bedGraph` format to visualise sequencing tracks using tools such as the UCSC browser or the integrative genomes browser. The ENCODE blacklist regions can be provided, to exclude them from the output:
 
 ```
 bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filtered.bam > <sample>.bedGraph
 ```
 
-
 ## Quantify
 
-The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification in alignment-mode. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
+The `bam` file aligned to the *transcriptome* will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification in alignment-mode. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
 
 Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
 
 ```
 salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
 ```
-
-
-
-### Visualise 
-
-
-
-UCSC binaries bedGraph to BigWig?
-
-## Quantification 
-
-Counts matrix generated (genes x samples)
-Bam -- featureCounts function in the Rsubread R package OR salmon --> counts 
-
-Salmon output The output is transcript-level abundance data which you will need to import into R using the tximport package.
 
 ## Functional analysis 
 

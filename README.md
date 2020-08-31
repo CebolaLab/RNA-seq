@@ -96,7 +96,7 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 
 ### Tag and remove duplicates and low-quality alignments
 
-#### Duplicate reads
+> Duplicate reads
 
 The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below).
 
@@ -117,7 +117,7 @@ It may be recommended to remove duplicate reads if the % of duplicates is high. 
 samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
 ```
 
-#### Multi-mapping reads
+> Multi-mapping reads
 
 **Multi-mapped reads**: these are defined as reads which can map in more than one location in the reference genome. A recent publication reviewing the handling of multi-mapping reads in RNA-seq data is reported by [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032).
 

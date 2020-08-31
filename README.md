@@ -39,7 +39,17 @@ A html report is generated, including the following information:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/fastp-summary.png" width="600">
 
-## Alignment
+## Align and quantify
+
+For this RNA-seq pipeline, the steps include:
+
+- Align to the reference human genome (GRCh38) using STAR 
+- Input the aligned `sam/bam` file into Salmon for quantification against the reference transcriptome 
+- Convert `bam` to `bedGraph`, normalise and visualise against the reference genome
+
+
+> Align to the reference genome (GRCh38)
+
 
 The filtered DNA reads must next be aligned to the reference genome. For RNA-seq data, a splice-aware aligner such as STAR or TopHat should be used. Here, [STAR](https://github.com/alexdobin/STAR) is used. The manual is available [here](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf). The reference genome used is the GRCh38 'no-alt' assembly from ncbi, recommended by [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use). The genome can be downloaded at [this link](ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz).  This version of the recent GRCh38 reference genome excludes alternative contigs which may cause fragments to map in multiple locations. The downloaded genome should be indexed with STAR. Other sources recommend the Ensembl [Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz](ftp://ftp.ensembl.org/pub/release-77/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz), however [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use) notes that this version of the genome includes multi-placed sequences such as the pseudo-autosomal regions on both chromosomes Z and Y, as well as some alpha satellites. 
 
@@ -55,6 +65,28 @@ STAR can then be run to align the fastq data files to the genome. If the fastq f
 
 ```
 STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.fastq.gz <sample>_R2.fastq.gz --outFileNamePrefix <sample> --outSAMtype BAM SortedByCoordinate
+```
+
+> Quantify
+
+The aligned `bam` file will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs. (Notably, Ensembl also includes predicted transcripts).
+
+The benefits of using Salmon are that it uses an expectation minimisation (EM) approach to quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. As described by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts 
+
+
+
+
+ For this reason, the analysis steps will be different if (1) aligning to the reference transcriptome, rather than the reference genome or (2) if analysing different classes of RNA (e.g. short RNAs of miRNAs), since sequence similarity levels are higher across the genome. The abundance of each class of RNA (e.g. mRNA, lncRNA, snRNA, miRNA, rRNA, snoRNA) will differ depending on the study protocol and focus, for example whether there was poly-A or size-based selection included during the library preparation. 
+
+
+```
+salmon quant -i gencode.v35.transcripts_index
+
+
+ -l A \
+         -1 ${fn}/${samp}_1.fastq.gz \
+         -2 ${fn}/${samp}_2.fastq.gz \
+         -p 8 --validateMappings -o quants/${samp}_quant
 ```
 
 ### Merge files
@@ -97,11 +129,9 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 ### Tag and remove duplicates and low-quality alignments
 
 
-> Multi-mapping reads
 
-**Multi-mapped reads**: these are defined as reads which can map in more than one location in the reference genome. A recent publication reviewing the handling of multi-mapping reads in RNA-seq data is reported by [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032). As described by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), there are many mechanisms which can lead to the duplication of coding sequences and different classes of RNAs have different levels of sequence similarity across the genome. For this reason, the analysis steps for analysing different classes of RNA (e.g. coding genes vs short RNAs) may be different. The abundance of each class of RNA (e.g. mRNA, lncRNA, snRNA, miRNA, rRNA, snoRNA) will differ depending on the study protocol, for example whether there was poly-A or size-based selection included during the library preparation. 
 
-In this pipeline, RNA-seq data is aligned to the reference genome. In alternative pipelines, where the data is aligned to the reference *transcriptome*, multiple isoforms of a gene may cause reads to align to multiple 'positions' in the reference.
+In this pipeline, RNA-seq data was aligned to the reference genome using the splice-aware aligner, STAR. 
 
 The approached to deal with multi-mapped reads are shown below, reproduced from [Deschamps-Francoeur et al. (2020)](https://www.sciencedirect.com/science/article/pii/S2001037020303032) Figure 3.
 

@@ -84,10 +84,88 @@ For compatibility with the STAR quantification, the `--quantMode TranscriptomeSA
 
 #### Merge files [optional]
 
-At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. 
+At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. For example, if your sample was split across lanes 1, 2 and 3 (`L001`, `L002`, `L003`).
 
+```
+samtools merge <sample>-merged.bam <sample>_L001.bam <sample>_L002.bam <sample>_L003.bam
+```
 
 ## Post-alignment QC
+
+First, QC reports will be generated using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html). Run on either the `<sample>.gzAligned.out.bam` or `<sample>.merged.bam`.
+
+```
+samtools sort <sample>.merged.bam > <sample>-sorted.bam
+
+qualimap bamqc -bam <sample>-sorted.bam -gtf ENCFF159KBI.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
+
+qualimap rnaseq -bam <sample>-sorted.bam -gff ENCFF159KBI.gtf -outdir <sample>-rnaseq-qualimap-reports --java-mem-size=16G
+```
+
+Qualimap can then run QC on combined samples. One included analysis is principal component analysis, which clusters the samples. This can be used to confirm whether technical and biological replicates cluster together. A text file should be created with 
+
+Note, some versions of qualimap require th e
+
+```
+qualimap multi-bamqc sample.txt
+```
+
+The QC reports can be combined using [multiqc](https://multiqc.info/); an excellent tool for combining QC reports of multiple samples into one. Example outputs of qualimap/multiqc include the alignment positions 
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Figures/multiqc-alignment.png" width="600">
+
+### Compute GC bias
+
+The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
+
+The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
+
+Set the `-l` argument to your fragment length.
+
+```
+deeptoolscomputeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
+```
+
+The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`.
+
+### Check correlation of technical and biological replicates
+
+
+## Visualisation 
+
+The `bam` file aligned to the *genome* should be converted to a `bedGraph/bigWig` format, which can be uploaded to genome browsers and viewed as a track. Here, the gene counts are normalised using `bamCoverage` from the `deeptools`.
+
+```
+bamCoverage -b <sample>.bam -o <sample>.bw --normalizeUsing BPM
+```
+
+There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
+
+
+## Quantification
+
+The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) to generate a matrix of gene counts.
+
+Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
+
+```
+salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
+```
+
+## Functional analysis 
+
+DEseq2, edgeR, limma for example. 
+
+## Functional analysis
+
+
+
+**Preseq**: Estimates library complexity
+
+**Picard RNAseqMetrics**: Number of reads that align to coding, intronic, UTR, intergenic, ribosomal regions, normalize gene coverage across a meta-gene body, identify 5’ or 3’ bias
+
+**RSeQC**: Suite of tools to assess various post-alignment quality, Calculate distribution of Insert Size, Junction Annotation (% Known, % Novel read spanning splice junctions), BAM to BigWig (Visual Inspection with IGV)
+
 
 The post-alignment QC steps involve several steps:
 
@@ -151,16 +229,10 @@ The QC-ed `bam`	file, aligned to the *reference genome* can be converted to a `b
 bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filtered.bam > <sample>.bedGraph
 ```
 
-## Quantify
-
-The `bam` file aligned to the *transcriptome* will next be input into [Salmon](https://combine-lab.github.io/salmon/) for transcript-level quantification in alignment-mode. There are several transcriptomes which you can download, including from Ensembl and GenCode. This pipeline will use the [GenCode transcriptome](ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_35/gencode.v35.transcripts.fa.gz) (here linked to release 35, but the user is recommended to select the most recent release) which contains curated sequences for both coding and non-coding RNAs (notably, Ensembl also includes predicted transcripts).
-
-Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
+The `bedGraph` file should then be converted to a `bigwig` format, which is a compressed version commonly used to upload data tracks for visualisation in a browser such as UCSC. 
 
 ```
-salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
+
+bedGraphToBigWig <sample>.bedGraph chrom.sizes <sample>.bw
 ```
 
-## Functional analysis 
-
-DEseq2, edgeR, limma for example. 

@@ -13,6 +13,10 @@ Resources include:
 - https://hbctraining.github.io/Intro-to-rnaseq-hpc-O2/lessons/03_alignment.html
 - The Encode pipeline for long-RNAs: https://www.encodeproject.org/data-standards/rna-seq/long-rnas/
 
+Understanding normalisation:
+- https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
+
+
 The pipeline covers the following steps:
 
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
@@ -104,7 +108,7 @@ qualimap rnaseq -bam <sample>-sorted.bam -gff ENCFF159KBI.gtf -outdir <sample>-r
 
 Qualimap can then run QC on combined samples. One included analysis is principal component analysis, which clusters the samples. This can be used to confirm whether technical and biological replicates cluster together. A text file should be created with 
 
-Note, some versions of qualimap require th e
+Note, some versions of qualimap require the raw_data_qualimapReport directory to be renamed to raw_data.
 
 ```
 qualimap multi-bamqc sample.txt
@@ -114,21 +118,37 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Figures/multiqc-alignment.png" width="600">
 
+### Remove duplicates?
+
+[Klepikova et al. 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/) recommend to ***not*** remove duplicates for single-end data, unless using molecular identifiers, but note that there may be some false positive results. 
+
 ### Compute GC bias
 
 The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
-
 The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
-
 Set the `-l` argument to your fragment length.
 
+The input `bam` file requires an index, which can be generated using `samtools index`.
+
 ```
-deeptoolscomputeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
+deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
 ```
 
-The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`.
+The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Figures/GCbiasPlot.pdf" width="600">
+
+
 
 ### Check correlation of technical and biological replicates
+
+The correlation between `bam` files of biological and technical replicates can be calculated as a QC step to ensure that the expected replicates positively correlate. 
+
+```
+multiBamSummary
+
+plotCorrelation
+```
 
 
 ## Visualisation 
@@ -144,13 +164,17 @@ There are multiple methods available for normalisation. Recent analysis by [Abra
 
 ## Quantification
 
-The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) to generate a matrix of gene counts.
+The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) in alignment-mode, in order to generate a matrix of gene counts. The Salmon documentation is available [here](https://salmon.readthedocs.io/en/latest/).
+
+Salmon uses a VBEM algorithm 
+
 
 Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
 
 ```
-salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample.bam> -o salmon_quant
+salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample>.gzAligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
 ```
+
 
 ## Functional analysis 
 

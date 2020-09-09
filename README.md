@@ -120,7 +120,7 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 ### Remove duplicates?
 
-[Klepikova et al. 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/) recommend to ***not*** remove duplicates for single-end data, unless using molecular identifiers, but note that there may be some false positive results. 
+[Klepikova et al. 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/) recommend to ***not*** remove duplicates for single-end data, unless using molecular identifiers, but note that there may be some false positive results. See more in [this useful blog post](https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/).
 
 ### Compute GC bias
 
@@ -136,7 +136,7 @@ deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 
 
 The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Figures/GCbiasPlot.pdf" width="600">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.pdf" width="600">
 
 
 

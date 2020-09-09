@@ -116,7 +116,7 @@ qualimap multi-bamqc sample.txt
 
 The QC reports can be combined using [multiqc](https://multiqc.info/); an excellent tool for combining QC reports of multiple samples into one. Example outputs of qualimap/multiqc include the alignment positions 
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Figures/multiqc-alignment.png" width="600">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multiqc-alignment.png" width="600">
 
 ### Remove duplicates?
 
@@ -139,7 +139,6 @@ The bias plot format can be changed to png, eps, plotly or svg. If there is sign
 ![GC bias plot](/Figures/GCbiasPlot.pdf)
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.pdf" width="600">
-
 
 
 ### Check correlation of technical and biological replicates

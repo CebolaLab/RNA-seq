@@ -51,8 +51,8 @@ For this RNA-seq pipeline, the steps include:
 
 - [Align to the reference human genome](#align-to-the-reference-genome)
 - [Post-alignment QC](#post-alignment-qc)
-- [Visualise tracks against the reference genome](#visualise)
-- [Quantify transcripts](#quantify)
+- [Visualise tracks against the reference genome](#visualisation)
+- [Quantify transcripts](#quantification)
 
 
 ## Align to the reference genome
@@ -88,7 +88,7 @@ For compatibility with the STAR quantification, the `--quantMode TranscriptomeSA
 
 #### Merge files [optional]
 
-At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. For example, if your sample was split across lanes 1, 2 and 3 (`L001`, `L002`, `L003`).
+At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. For example, if your sample was split across lanes 1, 2 and 3 (`L001`, `L002`, `L003`):
 
 ```
 samtools merge <sample>-merged.bam <sample>_L001.bam <sample>_L002.bam <sample>_L003.bam
@@ -126,9 +126,7 @@ It is generally recommended to *not* remove duplicates when working with RNA-seq
 
 GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
 
-It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. 
-
-When generating `bedGraph/BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
+It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. When generating `bedGraph/BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
 
 The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
 The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
@@ -147,7 +145,7 @@ The bias plot format can be changed to png, eps, plotly or svg. If there is sign
 If opting to correct the GC-bias, `correctGCbias` can be used. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and removes reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
 
 ```
- correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o gc_corrected.bam [options]
+ correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
 ```
 
 **NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNAs-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
@@ -165,10 +163,16 @@ plotCorrelation
 
 ## Visualisation 
 
-The `bam` file aligned to the *genome* should be converted to a `bedGraph/bigWig` format, which can be uploaded to genome browsers and viewed as a track. Here, the gene counts are normalised using `bamCoverage` from the `deeptools`.
+The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. The gene counts are here normalised to TPM values during conversion. 
 
 ```
-bamCoverage -b <sample>.bam -o <sample>.bw --normalizeUsing BPM
+bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
+```
+
+Biological replicates can also be merged and a bigWig file generated for the combined sample.
+
+```
+bamCompare -b <sample>_1.bam
 ```
 
 There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
@@ -187,13 +191,14 @@ Salmon is here used with the expectation minimisation (EM) approach method for q
 salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample>.gzAligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
 ```
 
+If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. 
+
 
 ## Functional analysis 
 
 DEseq2, edgeR, limma for example. 
 
 ## Functional analysis
-
 
 
 **Preseq**: Estimates library complexity
@@ -231,44 +236,3 @@ The first line shows the total number of DNA fragments. The % of DNA fragments a
 ```
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
-
-#### Tag and remove duplicates [optional]
-
-
-The next filtering steps include marking and [optionally] removing PCR duplicates, as well as removing low-quality reads (described below). Duplicate reads can be marked and the % of duplicate reads viewed using:
-
-```
-picard MarkDuplicates QUIET=true INPUT=<sample>.rmChrM.bam OUTPUT=<sample>.marked.bam METRICS_FILE=<sample>.sorted.metrics REMOVE_DUPLICATES=false CREATE_INDEX=true VALIDATION_STRINGENCY=LENIENT TMP_DIR=.
-
-head -n 8 <sample>.marked.metrics | cut -f 7,9 | grep -v ^# | tail -n 2
-```
-
-*Optional*: It may be recommended to remove duplicate reads if the % of duplicates is high. To remove duplicate reads, run the following code:
-
-```
-samtools view -h -b -F 1024 <sample>.marked.bam > <sample>.rmDup.bam
-```
-
-#### Remove flagged reads 
-
-If paired-end sequencing has been used, the aligned `bam` file can be filtered for properly mapped pairs (`-f 2`). For both single and paired-end reads, reads can be removed if they fail the platform/vendor QC checks (`-F 512`) or if they are unmapped (`-F 12`). (Duplicate reads can also be removed in this step using the flag `-F 1024`). The user can select their own combination, for example (run it on either the <sample>.rmChrM.bam or <sample>.rmDup.bam.
-
-```
-samtools view -h -b -F 512 -F 12 <sample>.bam > sample-filtered.bam
-```
-
-## Visualisation 
-
-The QC-ed `bam`	file, aligned to the *reference genome* can be converted to a `bedGraph` format to visualise sequencing tracks using tools such as the UCSC browser or the integrative genomes browser. The ENCODE blacklist regions can be provided, to exclude them from the output:
-
-```
-bedtools bamCoverage --blackListFileName --normalizeUsing BPM -b <sample>.filtered.bam > <sample>.bedGraph
-```
-
-The `bedGraph` file should then be converted to a `bigwig` format, which is a compressed version commonly used to upload data tracks for visualisation in a browser such as UCSC. 
-
-```
-
-bedGraphToBigWig <sample>.bedGraph chrom.sizes <sample>.bw
-```
-

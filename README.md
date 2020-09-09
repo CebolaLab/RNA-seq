@@ -136,6 +136,8 @@ deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 
 
 The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
 
+![GC bias plot](/Figures/GCbiasPlot.pdf)
+
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.pdf" width="600">
 
 

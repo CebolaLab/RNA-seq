@@ -16,12 +16,14 @@ Resources include:
 Understanding normalisation:
 - https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
 
-
-The pipeline covers the following steps:
+For this RNA-seq pipeline, the steps include:
 
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
-- [Alignment](#alignment)
+- [Align to the reference human genome](#align-to-the-reference-genome)
 - [Post-alignment QC](#post-alignment-qc)
+- [Visualise tracks against the reference genome](#visualisation)
+- [Quantify transcripts](#quantification)
+
 
 ## Pre-alignment QC
 
@@ -35,6 +37,8 @@ fastqc <sample>_1.fastq.gz -d . -o .
 fastqc <sample>_2.fastq.gz -d . -o .
 ```
 
+These fastQC reports can be combined into one summary report using [multiQC](https://multiqc.info/). 
+
 #### Adapter trimming 
 
 If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. 
@@ -47,13 +51,6 @@ A html report is generated, including the following information:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/fastp-summary.png" width="700">
 
-For this RNA-seq pipeline, the steps include:
-
-- [Align to the reference human genome](#align-to-the-reference-genome)
-- [Post-alignment QC](#post-alignment-qc)
-- [Visualise tracks against the reference genome](#visualisation)
-- [Quantify transcripts](#quantification)
-
 
 ## Align to the reference genome
 
@@ -63,12 +60,12 @@ The DNA reads are aligned using the splice-aware aligner, STAR. Here, [STAR](htt
 
 > Index the reference genome
 
-Set --sjdbOverhang to your maximum read length -1. The indexing also requires a file containing gene annotation, which comes in a `gtf` format. For example, ENCODE provides a gtf file with GRCh38 annotations, containing gencode gene coordinates, along with UCSC tRNAs and a PhiX spike-in. This file (ENCFF159KBI) can be downloaded [here](https://www.encodeproject.org/files/ENCFF159KBI/). The user should aim to use the most up-to-date reference files, while ensuring that the format is the same as the reference genome. For example, UCSC uses the 'chr1, chr2, chr3' naming convention, while ENSEMBL uses '1, 2, 3' etc. The files suggested here are compatible. 
+Set --sjdbOverhang to your maximum read length -1. The indexing also requires a file containing gene annotation, which comes in a `gtf` format. For example, ENCODE provides a gtf file with GRCh38 annotations, containing gencode gene coordinates, along with UCSC tRNAs and a PhiX spike-in. Here, we use `gencode.v35.annotation.gtf` as the most recent gene annotation file. The user should aim to use the most up-to-date reference files, while ensuring that the format is the same as the reference genome. For example, UCSC uses the 'chr1, chr2, chr3' naming convention, while ENSEMBL uses '1, 2, 3' etc. The files suggested here are compatible. 
 
 ```
 GENOMEDIR=/path/to/indexed/genome
 
-STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile ENCFF159KBI.gtf --sjdbOverhang readlength -1
+STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFastaFiles $GENOMEDIR/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna --sjdbGTFfile gencode.v35.annotation.gtf --sjdbOverhang readlength -1
 ```
 
 > Carry out the alignment
@@ -160,6 +157,35 @@ multiBamSummary
 plotCorrelation
 ```
 
+## Quantification
+
+The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) in alignment-mode, in order to generate a matrix of gene counts. The Salmon documentation is available [here](https://salmon.readthedocs.io/en/latest/).
+
+Salmon uses a VBEM algorithm 
+
+
+Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
+
+Technical replicates can be combined by providing the `-a` argument with a list of bam files, with the file names separated by a space. 
+
+```bash
+salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample>.gzAligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
+```
+
+If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths.
+
+
+### Investigate GC and gene-length bias
+
+A seminal paper by the Elkon lab [(Mandelboum et al. 2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) discusses the impact of sample-specific length bias on RNA-seq data. The authors investigate the effect of gene length on biased fragment count (i.e. the longer a gene, the more fragments. This could be interpreted as more gene expression in methods which compare counts of fragments!). This effect can be *sample-specific* and is not corrected by standard correction methods which assume that gene length affects samples equally. 
+
+The Elkon lab provide a [handy R script](https://github.com/ElkonLab/RNA-seq_length_bias) for plotting and visualising the gene-length bias in your data. The gene counts output by `Salmon` will be the input.
+
+```r
+
+
+```
+
 
 ## Visualisation 
 
@@ -177,21 +203,6 @@ bamCompare -b <sample>_1.bam
 
 There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
 
-
-## Quantification
-
-The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) in alignment-mode, in order to generate a matrix of gene counts. The Salmon documentation is available [here](https://salmon.readthedocs.io/en/latest/).
-
-Salmon uses a VBEM algorithm 
-
-
-Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
-
-```
-salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample>.gzAligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
-```
-
-If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. 
 
 
 ## Functional analysis 
@@ -236,3 +247,11 @@ The first line shows the total number of DNA fragments. The % of DNA fragments a
 ```
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
+
+
+
+
+$salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF0005790/p53-rep2-L002.gzAligned.toTranscriptome.out.bam -o "$sampleID".salmon_quant --fldMean $mean --fldSD 75 --seqBias --gcBias 
+
+
+

@@ -166,16 +166,28 @@ Salmon uses a VBEM algorithm
 
 Salmon is here used with the expectation minimisation (EM) approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
 
-Technical replicates can be combined by providing the `-a` argument with a list of bam files, with the file names separated by a space. 
+Salmon requires a transcriptome to be generated from the genome `fasta` and annotation `gtf` files used earlier with STAR. This can be generated using `gffread` (source package avaiable for download [here](http://ccb.jhu.edu/software/stringtie/gff.shtml)).
 
-```bash
-salmon quant --useEM -t gencode.v35.transcripts.fa --libType A -a <sample>.gzAligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
+```bash 
+gffread -w GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa -g GCA_000001405.15_GRCh38_no_alt_analysis_set.fna gencode.v35.annotation.gtf
 ```
 
-If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths.
+The `Aligned.toTranscriptome.bam` files should be merged for technical replicated prior to this step, using `samtools merge`. For example, if your sample was run on lanes 1, 2 and 3:
+
+```bash
+samtools merge <sample>.aligned.toTranscriptome.bam <sample>-L001.aligned.toTranscriptome.bam <sample>-L002.aligned.toTranscriptome.bam <sample>-L003.aligned.toTranscriptome.bam
+```
+
+Technical replicates can also be combined by providing the `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`. Here, salmon is run *without* any normalisation; this is carried out in the next step.
+
+```bash
+salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
+```
+
+If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. If listing multiple files to be combined, the library type will need to be specified, as Salmon cannot determine it automatically (see the Salmon documentation for more information).
 
 
-### Investigate GC and gene-length bias
+### Investigate GC and gene-length bias and normalise
 
 A seminal paper by the Elkon lab [(Mandelboum et al. 2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) discusses the impact of sample-specific length bias on RNA-seq data. The authors investigate the effect of gene length on biased fragment count (i.e. the longer a gene, the more fragments. This could be interpreted as more gene expression in methods which compare counts of fragments!). This effect can be *sample-specific* and is not corrected by standard correction methods which assume that gene length affects samples equally. 
 
@@ -185,6 +197,11 @@ The Elkon lab provide a [handy R script](https://github.com/ElkonLab/RNA-seq_len
 
 
 ```
+
+To normalise the data, we will use conditional quantile normalisation [(cqn)](https://academic.oup.com/biostatistics/article/13/2/204/1746212), described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212) which can account for sample-specific length and GC bias.
+
+
+
 
 
 ## Visualisation 

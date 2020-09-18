@@ -312,7 +312,7 @@ plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
 
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.pdf" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="500">
 
 
 ## Visualisation 

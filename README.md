@@ -1,12 +1,12 @@
 # RNA-seq
 
-[Cebola Lab](https://www.imperial.ac.uk/metabolism-digestion-reproduction/research/systems-medicine/genetics--genomics/regulatory-genomics-and-metabolic-disease/)
+A step-by-step analysis pipeline for RNA-seq data by the [Cebola Lab](https://www.imperial.ac.uk/metabolism-digestion-reproduction/research/systems-medicine/genetics--genomics/regulatory-genomics-and-metabolic-disease/).
+
+Correspondence: hannah.maude12@imperial.ac.uk
 
 ## **UNDER CONSTRUCTION**
 
 The resources and references used to build this tutorial are found at the bottom, in the [resources](#resources) section 
-
-Step-by-step analysis pipeline for RNA-seq data
 
 ## Table of Contents
 

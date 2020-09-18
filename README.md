@@ -16,7 +16,7 @@ Resources include:
 Understanding normalisation:
 - https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
 
-For this RNA-seq pipeline, the steps include:
+## Table of Contents
 
 *Run using command line tools (`bash`)*:
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)

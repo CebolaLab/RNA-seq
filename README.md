@@ -20,9 +20,9 @@ For this RNA-seq pipeline, the steps include:
 
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
 - [Align to the reference human genome](#align-to-the-reference-genome)
+- [Quantify transcripts](#quantification)
 - [Post-alignment QC](#post-alignment-qc)
 - [Visualise tracks against the reference genome](#visualisation)
-- [Quantify transcripts](#quantification)
 
 
 ## Pre-alignment QC
@@ -44,7 +44,14 @@ These fastQC reports can be combined into one summary report using [multiQC](htt
 If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. 
 
 ```
-fastp -i <sample>_R1.fastq.gz -O <sample>_R1.trimmed.fastq.g -I <sample>_R2.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 100 -j <sample>.fastp.json -h <sample>.fastp.html
+fastp -i <sample>_R1.fastq.gz -O <sample>_R1.trimmed.fastq.g -I <sample>_R2.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
+```
+
+For single-end reads: (note the adapter detection is not always as effective for single-end reads, so it is advisable to provide the adapter sequence, here the 'Illumina TruSeq Adapter Read 1'):
+
+
+```bash
+fastp -i <sample>.fastq.gz -o <sample>-trimmed.fastq.gz -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -l 25 -j <sample>.fastp.json -h <sample>.fastp.html 
 ```
 
 A html report is generated, including the following information:
@@ -124,8 +131,6 @@ It is generally recommended to *not* remove duplicates when working with RNA-seq
 
 The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) in alignment-mode, in order to generate a matrix of gene counts. The Salmon documentation is available [here](https://salmon.readthedocs.io/en/latest/).
 
-Salmon is here used with the expectation minimisation (EM)/VBEM? approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. 
-
 #### Generate transcriptome
 
 Salmon requires a transcriptome to be generated from the genome `fasta` and annotation `gtf` files used earlier with STAR. This can be generated using `gffread` (source package avaiable for download [here](http://ccb.jhu.edu/software/stringtie/gff.shtml)).
@@ -142,9 +147,9 @@ The `Aligned.toTranscriptome.bam` files should be merged for technical replicate
 samtools merge <sample>.aligned.toTranscriptome.bam <sample>-L001.aligned.toTranscriptome.bam <sample>-L002.aligned.toTranscriptome.bam <sample>-L003.aligned.toTranscriptome.bam
 ```
 
-### Run salmon
+### Run Salmon
 
-Technical replicates can also be combined by providing the `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`. Here, salmon is run *without* any normalisation; this is carried out in the next step.
+Salmon is here used with the expectation minimisation (EM)/VBEM? approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. Technical replicates can also be combined by providing the Salmon `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`). Here, Salmon is run ***without*** any normalisation; this is carried out in the next step.
 
 ```bash
 salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
@@ -153,11 +158,41 @@ salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --
 If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. If listing multiple files to be combined, the library type will need to be specified, as Salmon cannot determine it automatically (see the Salmon documentation for more information).
 
 
+## Differential expression
+
+*All following code should be run in `R`*
+
+To install the required packages:
+
+```R
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("cqn")
+BiocManager::install("edgeR")
+BiocManager::install("DESeq2")
+BiocManager::install("tximport")
+```
+
+### Import into R
+
+The output files from salmon, `quant.sf` will be imported into `R` using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson).
+
+
+```R
+library(tximport)
+```
+
+For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.
+
+
 ### Investigate GC and gene-length bias and normalise
 
 A seminal paper by the Elkon lab [(Mandelboum et al. 2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) discusses the impact of sample-specific length bias on RNA-seq data. The authors investigate the effect of gene length on biased fragment count (i.e. the longer a gene, the more fragments. This could be interpreted as more gene expression in methods which compare counts of fragments!). This effect can be *sample-specific* and is not corrected by standard correction methods which assume that gene length affects samples equally. 
 
 The Elkon lab provide a [handy R script](https://github.com/ElkonLab/RNA-seq_length_bias) for plotting and visualising the gene-length bias in your data. The gene counts output by `Salmon` will be the input.
+
+The cqn normalisation requires the transcript lengths and GC contents. These can be calculated using the EMBOSS infoseq tool.
 
 ```r
 

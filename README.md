@@ -18,10 +18,13 @@ Understanding normalisation:
 
 For this RNA-seq pipeline, the steps include:
 
+*Run using command line tools (`bash`)*:
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
 - [Align to the reference human genome](#align-to-the-reference-genome)
 - [Quantify transcripts](#quantification)
-- [Post-alignment QC](#post-alignment-qc)
+
+*Run in `R`*:
+- [Differential expression](#differential-expression)
 - [Visualise tracks against the reference genome](#visualisation)
 
 
@@ -225,6 +228,7 @@ for(x in names(groups)){
 
 ### Filter genes 
 
+There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr` which carrys out informative gene filtering. 
 
 ```R
 #The groups can be updated to reflect the biological replicates

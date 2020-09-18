@@ -257,7 +257,7 @@ for(x in names(groups)){
   counts.combined[,x]=apply(counts[,groups[[x]]],1,sum)}
 ```
 
-### \+ Filter genes 
+### Filter genes 
 
 There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr` which carrys out informative gene filtering. 
 
@@ -305,6 +305,14 @@ contrast1=makeContrasts(group2-group1)
 ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
 
 ```
+
+
+```R
+plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
+
+```
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.pdf" width="500">
 
 
 ## Visualisation 

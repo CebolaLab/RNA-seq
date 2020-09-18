@@ -6,14 +6,14 @@ Correspondence: hannah.maude12@imperial.ac.uk
 
 ## ** \*UNDER CONSTRUCTION\* **
 
-The resources and references used to build this tutorial are found at the bottom, in the [resources](#resources) section 
+The resources and references used to build this tutorial are found at the bottom, in the [resources](#resources) section.
 
 ## Table of Contents
 
 *Run using command line tools (`bash`)*:
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
 - [Align to the reference human genome](#align-to-the-reference-genome)
-- [Post-alignment quality control (QC)](#post-alignment-qc)
+- [Post-alignment QC](#post-alignment-qc)
 - [Quantify transcripts](#quantification)
 - [Visualise tracks against the reference genome](#visualisation)
 
@@ -124,7 +124,7 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 ### Remove duplicates?
 
-It is generally recommended to *not* remove duplicates when working with RNA-seq data, unless using UMIs (unique molecular identifiers) [Klepikova et al. 2017](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/). This is because there are likely to be DNA molecules which are natural duplicates of each other, for example originating from genes with a shared sequence in a common domain. Typically, removing duplicates does more harm than good. It is more or less impossible to remove duplicates from single-end data and research has also suggested it may cause false negatives when applied to paired end data. See more in [this useful blog post](https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/). Generally, duplicates are not a problem so long as the *library complexity is high*. 
+It is generally recommended to *not* remove duplicates when working with RNA-seq data, unless using UMIs (unique molecular identifiers) [(Klepikova et al. 2017)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/). This is because there are likely to be DNA molecules which are natural duplicates of each other, for example originating from genes with a shared sequence in a common domain. Typically, removing duplicates does more harm than good. It is more or less impossible to remove duplicates from single-end data and research has also suggested it may cause false negatives when applied to paired end data. See more in [this useful blog post](https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/). Generally, duplicates are not a problem so long as the *library complexity is high*. 
 
 
 
@@ -147,6 +147,8 @@ deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 
 The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.png" width="500">
+
+The GC-bias will later be corrected when normalising the data for DGE analysis. However, for visualisation purposes, the user may wish to correct the GC-bias for the corresponding bigWig file.
 
 If opting to correct the GC-bias, `correctGCbias` can be used. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and removes reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
 
@@ -179,17 +181,9 @@ Salmon requires a transcriptome to be generated from the genome `fasta` and anno
 gffread -w GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa -g GCA_000001405.15_GRCh38_no_alt_analysis_set.fna gencode.v35.annotation.gtf
 ```
 
-#### Merge technical replicates
-
-The `Aligned.toTranscriptome.bam` files should be merged for technical replicated prior to this step, using `samtools merge`. For example, if your sample was run on lanes 1, 2 and 3:
-
-```bash
-samtools merge <sample>.aligned.toTranscriptome.bam <sample>-L001.aligned.toTranscriptome.bam <sample>-L002.aligned.toTranscriptome.bam <sample>-L003.aligned.toTranscriptome.bam
-```
-
 ### Run Salmon
 
-Salmon is here used with the expectation minimisation (EM)/VBEM? approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. Technical replicates can also be combined by providing the Salmon `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`). Here, Salmon is run ***without*** any normalisation; this is carried out in the next step.
+Salmon is here used with the expectation minimisation (EM)/VBEM? approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. Technical replicates can also be combined by providing the Salmon `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`). Here, Salmon is run ***without*** any normalisation, on each technical replicate; samples are combined and normalised in the next steps.
 
 ```bash
 salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
@@ -263,7 +257,7 @@ for(x in names(groups)){
   counts.combined[,x]=apply(counts[,groups[[x]]],1,sum)}
 ```
 
-### Filter genes 
+### \+ Filter genes 
 
 There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr` which carrys out informative gene filtering. 
 

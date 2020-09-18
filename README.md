@@ -160,7 +160,7 @@ If using single end data, add the `--fldMean` and `--fldSD` parameters to includ
 
 ## Differential expression
 
-*All following code should be run in `R`*
+***All following code should be run in `R`.***
 
 To install the required packages:
 
@@ -174,13 +174,28 @@ BiocManager::install("DESeq2")
 BiocManager::install("tximport")
 ```
 
-### Import into R
+### Import count data
 
 The output files from salmon, `quant.sf` will be imported into `R` using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson).
+
+The most straightforward way is to first create a file containing the paths to the `quant.sf` files, the sample names and the group. This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. In this example, column 1 shows the path to the `quant.sf` file, column 2 shows the sample name and column 3 shows the group.
 
 
 ```R
 library(tximport)
+
+samples=read.table('samples.txt')
+tx2gene<-read.table('tx2gene.txt',sep='\t')
+
+
+#Column 1 contains the paths to the quant.sf files
+counts.imported=tximport(files=as.character(samples[,1]),type='salmon',tx2gene=tx2gene)
+
+#Extract the count data
+counts=counts.imported$counts
+
+#Label the columns by the sample name
+colnames(counts)<-samples[,1]
 ```
 
 For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.

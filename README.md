@@ -1,20 +1,12 @@
 # RNA-seq
 
-## **UNDER CONSTRUCTION**
-
 [Cebola Lab](https://www.imperial.ac.uk/metabolism-digestion-reproduction/research/systems-medicine/genetics--genomics/regulatory-genomics-and-metabolic-disease/)
 
+## **UNDER CONSTRUCTION**
+
+The resources and references used to build this tutorial are found at the bottom, in the [resources](#resources) section 
+
 Step-by-step analysis pipeline for RNA-seq data
-
-Resources include: 
-
-- <https://vallierlab.wixsite.com/pipelines/rna-seq>
-- [RNA-seq workflow: gene-level exploratory analysis and differential expression by Love et al. 2019](http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#running-the-differential-expression-pipeline)
-- https://hbctraining.github.io/Intro-to-rnaseq-hpc-O2/lessons/03_alignment.html
-- The Encode pipeline for long-RNAs: https://www.encodeproject.org/data-standards/rna-seq/long-rnas/
-
-Understanding normalisation:
-- https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
 
 ## Table of Contents
 
@@ -390,3 +382,14 @@ $salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF000579
 
 
 
+## Resources
+
+Many resources were used in building this RNA-seq tutorial.
+
+- <https://vallierlab.wixsite.com/pipelines/rna-seq>
+- [RNA-seq workflow: gene-level exploratory analysis and differential expression by Love et al. 2019](http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#running-the-differential-expression-pipeline)
+- https://hbctraining.github.io/Intro-to-rnaseq-hpc-O2/lessons/03_alignment.html
+- The Encode pipeline for long-RNAs: https://www.encodeproject.org/data-standards/rna-seq/long-rnas/
+
+Understanding normalisation:
+- https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html

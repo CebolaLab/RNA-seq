@@ -306,10 +306,10 @@ ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
 
 ```
 
+An MD plot of log fold-change against average expression can be plotted using the following:
 
 ```R
 plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
-
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="500">

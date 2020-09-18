@@ -184,8 +184,9 @@ The most straightforward way is to first create a file containing the paths to t
 ```R
 library(tximport)
 
+#Read in the files with the sample information and the gene/transcript IDs (provided in this repository)
 samples=read.table('samples.txt')
-tx2gene<-read.table('tx2gene.txt',sep='\t')
+tx2gene=read.table('tx2gene.txt',sep='\t')
 
 
 #Column 1 contains the paths to the quant.sf files
@@ -195,7 +196,7 @@ counts.imported=tximport(files=as.character(samples[,1]),type='salmon',tx2gene=t
 counts=counts.imported$counts
 
 #Label the columns by the sample name
-colnames(counts)<-samples[,1]
+colnames(counts)=samples[,1]
 ```
 
 For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.

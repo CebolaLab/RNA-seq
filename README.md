@@ -178,7 +178,7 @@ BiocManager::install("tximport")
 
 The output files from salmon, `quant.sf` will be imported into `R` using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson).
 
-The most straightforward way is to first create a file containing the paths to the `quant.sf` files, the sample names and the group. This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. In this example, column 1 shows the path to the `quant.sf` file, column 2 shows the sample name and column 3 shows the group.
+The most straightforward way is to first create a file containing the paths to the `quant.sf` files, the sample names and the group. This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. In this example, column 1 shows the path to the `quant.sf` file, column 2 shows the sample name, column 3 shows the technical replicate group and column 4 shows the biological replicate group.
 
 
 ```R
@@ -188,34 +188,92 @@ library(tximport)
 samples=read.table('samples.txt')
 tx2gene=read.table('tx2gene.txt',sep='\t')
 
-
-#Column 1 contains the paths to the quant.sf files
+#Column 1, samples[,1], contains the paths to the quant.sf files
 counts.imported=tximport(files=as.character(samples[,1]),type='salmon',tx2gene=tx2gene)
 
 #Extract the count data
 counts=counts.imported$counts
 
 #Label the columns by the sample name
-colnames(counts)=samples[,1]
+colnames(counts)=samples[,2]
 ```
 
-For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.
+The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation, `cqn` is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) in order to correct for sample-specific biases. cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
 
 
-### Investigate GC and gene-length bias and normalise
 
-A seminal paper by the Elkon lab [(Mandelboum et al. 2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) discusses the impact of sample-specific length bias on RNA-seq data. The authors investigate the effect of gene length on biased fragment count (i.e. the longer a gene, the more fragments. This could be interpreted as more gene expression in methods which compare counts of fragments!). This effect can be *sample-specific* and is not corrected by standard correction methods which assume that gene length affects samples equally. 
+`cqn` requires an input of the gene lengths, gc contents and the estimated library size (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.
 
-The Elkon lab provide a [handy R script](https://github.com/ElkonLab/RNA-seq_length_bias) for plotting and visualising the gene-length bias in your data. The gene counts output by `Salmon` will be the input.
+```R
+#Read in the gene lengths and gc-content data frame (provided in this repository)
+genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
+```
 
-The cqn normalisation requires the transcript lengths and GC contents. These can be calculated using the EMBOSS infoseq tool.
+At this stage, technical replicates can be combined. This is typically achieved by summing the counts. In this example, there are three groups:
 
-```r
+```R
+#Create a list with the samples names (samples[,2]) by group (samples[,3])
+groups=split(as.character(samples[,2]), samples[,3])
 
+#Create a matrix to contain the new counts from the combined technical replicates
+counts.combined=matrix(nrow=nrow(counts),ncol=length(groups),dimnames=list(rownames(counts),names(groups)))
+
+#For each group, sum the number of counts across the replicates
+for(x in names(groups)){
+  counts.combined[,x]=apply(counts[,groups[[x]]],1,sum)}
+```
+
+### Filter genes 
+
+
+```R
+#The groups can be updated to reflect the biological replicates
+groups=unique(samples[,3:4])
+
+#The genes are filtered to remove those with low expression
+counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
+```
+
+
+```R
+#Extract the gene lengths and gc-content from the genes.length.gc data frame
+#By subsetting using the counts.combined rownames, the rows will be the same order
+geneslengths=genes.length.gc[rownames(counts.combined),]$length
+genesgc=genes.length.gc[rownames(counts.combined),]$gc
+
+#Run cqn
+cqn.results<-cqn(counts.combined, genesgc, geneslengths, lengthMethod = c("smooth")) 
+```
+
+The normalised counts can be obtained using `cqn.results$y + cqn.results$offset`. For the following analysis, the `cqn.results$glm.offset` will be input into the edgeR differential expression analysis.
+
+```R
+offset=cqn.results$glm.offset
+
+#Make the edgeR DGEList object and input the cqn offset
+y <- DGEList(counts=counts.combined,group=groups[,2])
+y$offset <- offset
+#If you wish all the comparisons to be relative to your first group (e.g. a control), remove the 0+
+design <- model.matrix(~ 0+group,data=group)
+y <- estimateGLMCommonDisp(y, design = design)
+
+#Run the quasi-likelihood, glm fit
+QLfit <- glmQLFit(y,design)
+```
+
+To carry out the differential expression comparison, the groups to be compared should first be defined. Here, it is assumed that each group contained two or more biological replicates. 
+
+```R
+#Replace 'group1' and 'group 2' with the names of your groups which you wish to compare
+contrast1=makeContrasts(group2-group1)
+
+ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
 
 ```
 
-To normalise the data, we will use conditional quantile normalisation [(cqn)](https://academic.oup.com/biostatistics/article/13/2/204/1746212), described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212) which can account for sample-specific length and GC bias.
+
+
+
 
 
 

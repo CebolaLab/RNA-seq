@@ -354,7 +354,7 @@ text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 
 #### MD plot
 
-An MD plot of log2 fold-change against average expression (CPM, counts per million) can be plotted using the following:
+A mean-difference (MD) plot plots the log fold-change between two samples against the average gene expression. An MD plot of log2 fold-change against average expression (CPM, counts per million) can be plotted using the following:
 
 ```R
 plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
@@ -363,6 +363,22 @@ plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
 
 #### p-value distribution
+
+The distribution of p-values following a differential expression analysis can be an indication of whether the experiment worked. 
+
+```R
+#The distribution of p-values
+hist(ql.108$table$PValue,col='grey',breaks=50,main='p108_T vs p108',xlab='p-values')
+
+#The false-discovery rate distribution
+hist(topTags(ql.108,n=length(genes))$table$FDR,col='grey',breaks=50,main='p108_T vs p108',xlab='FDR')
+```
+
+The p-value distribution:
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/P-values-hist.png" width="800">
+
+The false discovery rate (FDR) distribution:
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FDR-hist.png" width="800">
 
 #### Volcano plots
 

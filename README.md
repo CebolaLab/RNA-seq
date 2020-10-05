@@ -196,6 +196,14 @@ If using single end data, add the `--fldMean` and `--fldSD` parameters to includ
 
 ***All following code should be run in `R`.***
 
+The differential expression analysis contains the following steps:
+
+- [Import count data](#import-count-data)
+- [Filter genes](#filter-genes)
+- [Normalisation](#normalisation)
+- [Differential expression analysis](#differential-expression-analysis)
+- [QC plots](#qc-plots)
+
 To install the required packages:
 
 ```R
@@ -269,6 +277,8 @@ groups=unique(samples[,3:4])
 counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
 ```
 
+### Normalisation 
+
 ```R
 #Extract the gene lengths and gc-content from the genes.length.gc data frame
 #By subsetting using the counts.combined rownames, the rows will be the same order
@@ -277,9 +287,14 @@ genesgc=genes.length.gc[rownames(counts.combined),]$gc
 
 #Run cqn
 cqn.results<-cqn(counts.combined, genesgc, geneslengths, lengthMethod = c("smooth")) 
+
+#The normalised valies can be saves as:
+RPKM.cqn<-cqn.results$y + cqn.results$offset
 ```
 
 The normalised counts can be obtained using `cqn.results$y + cqn.results$offset`. For the following analysis, the `cqn.results$glm.offset` will be input into the edgeR differential expression analysis.
+
+### Differential expression analysis
 
 ```R
 offset=cqn.results$glm.offset
@@ -308,6 +323,34 @@ ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
 
 ### QC plots
 
+Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
+
+- [Biological replicate correlation](#biological-replicate-correlation)
+- [MD plot](#md-plot)
+- [p-value distribution](#p-value-distribution)
+- [Volcano plot](#volcano-plot)
+
+
+#### Biological replicate correlation
+
+The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` can be used 
+
+```R
+#To test the correlation between the first two samples in columns 1 and 2
+plot(RPKM.cqn[,1],RPKM.cqn[,2],pch=18,cex=0.5,xlab=colnames(RPKM.cqn)[1],ylab=colnames(RPKM.cqn)[2])
+
+#The Pearson correlation coefficient can be calculated as:
+cor(RPKM.cqn[,1],RPKM.cqn[,2])
+
+#To add it to your plot, replace x and y with the coordinates for your legend
+text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
+```
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.pdf" width="500">
+
+#### MD plot
+
+
 An MD plot of log fold-change against average expression can be plotted using the following:
 
 ```R
@@ -316,8 +359,9 @@ plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="500">
 
+#### p-value distribution
 
-### Volcano plots
+#### Volcano plots
 
 Volcano plots are generated as described by [Ignacio Gonz´alez](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf)
 
@@ -329,24 +373,6 @@ lfc = 2
 pval = 0.05
 
 ```
-
-
-## Visualisation 
-
-The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. The gene counts are here normalised to TPM values during conversion. 
-
-```
-bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
-```
-
-Biological replicates can also be merged and a bigWig file generated for the combined sample.
-
-```
-bamCompare -b <sample>_1.bam
-```
-
-There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
-
 
 ## Functional analysis
 
@@ -392,6 +418,24 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 
 $salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF0005790/p53-rep2-L002.gzAligned.toTranscriptome.out.bam -o "$sampleID".salmon_quant --fldMean $mean --fldSD 75 --seqBias --gcBias 
 
+
+
+
+## Visualisation 
+
+The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. The gene counts are here normalised to TPM values during conversion. 
+
+```
+bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
+```
+
+Biological replicates can also be merged and a bigWig file generated for the combined sample.
+
+```
+bamCompare -b <sample>_1.bam
+```
+
+There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
 
 
 ## Resources

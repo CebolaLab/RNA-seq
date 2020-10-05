@@ -362,16 +362,16 @@ plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
 
-#### p-value distribution
+#### Distribution of p-values and FDRs
 
 The distribution of p-values following a differential expression analysis can be an indication of whether the experiment worked. 
 
 ```R
 #The distribution of p-values
-hist(ql.108$table$PValue,col='grey',breaks=50,main='p108_T vs p108',xlab='p-values')
+hist(ql.groups12$table$PValue,col='grey',breaks=50,main='p108_T vs p108',xlab='p-values')
 
 #The false-discovery rate distribution
-hist(topTags(ql.108,n=length(genes))$table$FDR,col='grey',breaks=50,main='p108_T vs p108',xlab='FDR')
+hist(topTags(ql.groups12,n=length(genes))$table$FDR,col='grey',breaks=50,main='p108_T vs p108',xlab='FDR')
 ```
 
 The p-value distribution:
@@ -382,7 +382,9 @@ The false discovery rate (FDR) distribution:
 
 #### Volcano plots
 
-Volcano plots are generated as described by [Ignacio Gonz´alez](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf)
+A volcano plot is a scatterplot which plots the p-value of differential expression against the fold-change. The volcano plot can be designed to highlight datapoints of significant genes, with a p-value and fold-change cut off.
+
+Volcano plots are generated as described by [Ignacio González](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf)
 
 ```R
 #Allow for more space around the borders of the plot
@@ -391,7 +393,30 @@ par(mar = c(5, 4, 4, 4))
 lfc = 2
 pval = 0.05
 
+tab = data.frame(logFC = ql.groups12$table[, 1], negLogPval = -log10(ql.groups12$table[, 4]))
+
+plot(tab, pch = 16, cex = 0.4, xlab = expression(log[2]~fold~change),
+     ylab = expression(-log[10]~pvalue),main='p53_T vs p53')
+
+#Genes with a fold-change greater than 2 and p-value<0.05:
+signGenes = (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))
+
+#Colour these red
+points(tab[signGenes, ], pch = 16, cex = 0.5, col = "red")
+
+#Show the cut-off lines
+abline(h = -log10(pval), col = "green3", lty = 2)
+abline(v = c(-lfc, lfc), col = "blue", lty = 2)
+
+mtext(paste("FDR =", pval), side = 4, at = -log10(pval), cex = 0.6, line = 0.5, las = 1)
+mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc, lfc),
+      cex = 0.6, line = 0.5)
+
 ```
+
+The resulting plot will look like this:
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/volcano-plot-QL-0.05" width="700">
 
 ## Functional analysis
 

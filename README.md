@@ -416,7 +416,7 @@ mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc
 
 The resulting plot will look like this:
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/volcano-plot-QL-0.05.png" width="700">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/volcano-plot-QL-0.05.png" width="600">
 
 ## Functional analysis
 

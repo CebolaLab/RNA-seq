@@ -459,7 +459,7 @@ go.results.up <- goseq(pwf.up, "hg19","ensGene")
 
 The `go.results.up` dataframe looks like this:
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Go-output.png" width="600">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/Go-output.png" width="800">
 
 
 ### GSEA 

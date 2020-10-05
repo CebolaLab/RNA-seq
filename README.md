@@ -274,12 +274,16 @@ There are likely to be many annotated genes which are not expressed in your samp
 groups=unique(samples[,3:4])
 
 #The genes are filtered to remove those with low expression
+library(edgeR)
+
 counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
 ```
 
 ### Normalisation 
 
 ```R
+library(cqn)
+
 #Extract the gene lengths and gc-content from the genes.length.gc data frame
 #By subsetting using the counts.combined rownames, the rows will be the same order
 geneslengths=genes.length.gc[rownames(counts.combined),]$length
@@ -346,7 +350,7 @@ cor(RPKM.cqn[,1],RPKM.cqn[,2])
 text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.pdf" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="500">
 
 #### MD plot
 

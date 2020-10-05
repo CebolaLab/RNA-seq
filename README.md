@@ -420,6 +420,10 @@ The resulting plot will look like this:
 
 ## Functional analysis
 
+Functional analysis can further investigate the differential expression of each gene. Pathway analysis is a popular approach with which to investigate the differential expression of pathways, including genes with similar biological functions. This can be achieved using gene set analysis (GSA). There are many flavours of GSA. They can be categorised as shown below by [Das et al. (2020)](https://www.mdpi.com/1099-4300/22/4/427).
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GSA-classification.png" width="600">
+
 
 **Preseq**: Estimates library complexity
 

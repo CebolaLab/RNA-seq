@@ -350,7 +350,7 @@ cor(RPKM.cqn[,1],RPKM.cqn[,2])
 text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="700">
 
 #### MD plot
 

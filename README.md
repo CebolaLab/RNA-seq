@@ -424,6 +424,46 @@ Functional analysis can further investigate the differential expression of each 
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GSA-classification.png" width="600">
 
+Here, we will use one gene annotation approach and one gene set enrichment analysis (GSEA) approach. 
+
+### GoSeq - gene annotation
+
+[GoSeq](https://bioconductor.org/packages/release/bioc/html/goseq.html), developed by [Young et al. (2010)](https://genomebiology.biomedcentral.com/articles/10.1186/gb-2010-11-2-r14), tests for the enrichment of Gene Ontology terms.
+
+```R
+BiocManager::install("goseq")
+library(goseq)
+
+#Extract the differential expression data, with false discovery rate correction
+groups12.table<-as.data.frame(topTags(ql.groups12,n= Inf))
+
+#Remove the version numbers from the ENSEMBL gene IDs
+rownames(groups12.table)<-unlist(lapply(strsplit(rownames(groups12.table),'\\.'),`[[`,1))
+```
+
+The genes can be seperated into those which show significantly increased expression and those which show significantly decreased expression. Here, the FDR threshold is set to 0.05. A minimum fold-change can also be defined. 
+
+```R
+#Decreased expression
+ql53.DEGs.down <- groups12.table$FDR < 0.05 & groups12.table$logFC<0
+names(ql53.DEGs.down) <- rownames(groups12.table)
+pwf.dn <- nullp(ql53.DEGs.up, "hg19","ensGene")
+go.results.dn <- goseq(pwf.dn, "hg19","ensGene")
+
+#Increased expression
+ql53.DEGs.up <- groups12.table$FDR < 0.05 & groups12.table$logFC>0
+names(ql53.DEGs.up) <- rownames(groups12.table)
+pwf.up <- nullp(ql53.DEGs.down, "hg19","ensGene")
+go.results.up <- goseq(pwf.up, "hg19","ensGene")
+```
+
+The `go.results.up` dataframe looks like this:
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GO-output.png" width="600">
+
+
+### GSEA 
+
 
 **Preseq**: Estimates library complexity
 

@@ -230,10 +230,10 @@ counts=counts.imported$counts
 
 #Label the columns by the sample name
 colnames(counts)=samples[,2]
+
 ```
 
 The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation, `cqn` is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) in order to correct for sample-specific biases. cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
-
 
 
 `cqn` requires an input of the gene lengths, gc contents and the estimated library size (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.
@@ -243,7 +243,7 @@ The count data needs to be normalised for several confounding factors. The numbe
 genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
 ```
 
-At this stage, technical replicates can be combined. This is typically achieved by summing the counts. In this example, there are three groups:
+At this stage, technical replicates can be combined. This is typically achieved by summing the counts. There are three groups in the below example:
 
 ```R
 #Create a list with the samples names (samples[,2]) by group (samples[,3])
@@ -259,7 +259,7 @@ for(x in names(groups)){
 
 ### Filter genes 
 
-There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr` which carrys out informative gene filtering. 
+There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr`, which carrys out informative gene filtering. 
 
 ```R
 #The groups can be updated to reflect the biological replicates
@@ -268,7 +268,6 @@ groups=unique(samples[,3:4])
 #The genes are filtered to remove those with low expression
 counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
 ```
-
 
 ```R
 #Extract the gene lengths and gc-content from the genes.length.gc data frame
@@ -288,6 +287,7 @@ offset=cqn.results$glm.offset
 #Make the edgeR DGEList object and input the cqn offset
 y <- DGEList(counts=counts.combined,group=groups[,2])
 y$offset <- offset
+
 #If you wish all the comparisons to be relative to your first group (e.g. a control), remove the 0+
 design <- model.matrix(~ 0+group,data=group)
 y <- estimateGLMCommonDisp(y, design = design)
@@ -306,6 +306,8 @@ ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
 
 ```
 
+### QC plots
+
 An MD plot of log fold-change against average expression can be plotted using the following:
 
 ```R
@@ -313,6 +315,20 @@ plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="500">
+
+
+### Volcano plots
+
+Volcano plots are generated as described by [Ignacio Gonz´alez](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf)
+
+```R
+#Allow for more space around the borders of the plot
+par(mar = c(5, 4, 4, 4))
+#Set your log-fold-change and p-value thresholds 
+lfc = 2
+pval = 0.05
+
+```
 
 
 ## Visualisation 
@@ -331,11 +347,6 @@ bamCompare -b <sample>_1.bam
 
 There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
 
-
-
-## Functional analysis 
-
-DEseq2, edgeR, limma for example. 
 
 ## Functional analysis
 
@@ -386,6 +397,11 @@ $salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF000579
 ## Resources
 
 Many resources were used in building this RNA-seq tutorial.
+
+Other RNA-seq tutorials:
+- [Statistical analysis of RNA-Seq data](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf) by Ignacio Gonz´alez 
+- [Analysis of RNA-Seq data: gene-level exploratory analysis and differential expression](https://www.huber.embl.de/users/klaus/Teaching/DESeq2Predoc2014.html#gene-ontology-enrichment-analysis) by Bernd Klaus and Wolfgang Huber
+
 
 - <https://vallierlab.wixsite.com/pipelines/rna-seq>
 - [RNA-seq workflow: gene-level exploratory analysis and differential expression by Love et al. 2019](http://master.bioconductor.org/packages/release/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html#running-the-differential-expression-pipeline)

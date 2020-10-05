@@ -350,18 +350,17 @@ cor(RPKM.cqn[,1],RPKM.cqn[,2])
 text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="700">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="800">
 
 #### MD plot
 
-
-An MD plot of log fold-change against average expression can be plotted using the following:
+An MD plot of log2 fold-change against average expression (CPM, counts per million) can be plotted using the following:
 
 ```R
-plotMD(ql.ql.groups12,main='Group1 vs Group2',cex=0.5)
+plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
 
 #### p-value distribution
 

@@ -469,7 +469,7 @@ write.table(go.results.up[go.results.up$over_represented_pvalue<0.05,1:2],'p53-G
 
 ...and uploaded to the REVIGO tool which collapses and summarises redundant GO terms. Copy the contents of the `p53-GO-up0.05.txt` into the [REVIGO](http://revigo.irb.hr/) box:
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO-input.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO-input.png" width="500">
 
 
 ### GSEA 

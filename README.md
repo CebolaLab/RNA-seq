@@ -475,10 +475,30 @@ After running, select the 'Scatterplot & Table' tab and scroll down to 'export r
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO2.png" width="800">
 
+Save the downloaded file as `REVIGO-UP.csv`. The package `ggplot2` can be used here to visualise the log<10> p-values for GO term enrichment. To view the top 10 terms:
+
+```R
+revigoUP=read.table('REVIGO-UP.csv',sep=',',header=TRUE)
+revigoUP[order(revigoUP$log10.p.value),]
+revigoUP=head(revigoUP,n=10)
+
+[order(revigoUP.108top$log10.p.value),]
+revigoUP.top=revigoUP.108[revigoUP.108$log10.p.value<(-3.5),]
 
 
+revigoUP.top=revigoUP.108top[order(revigoUP.top$log10.p.value),]
 
 
+revigoUP.108top$description <- factor(revigoUP.108top$description, levels = revigoUP.108top$description)
+p<-ggplot(data=revigoUP.108top, aes(x=log10.p.value, y=description, fill=description)) +
+  geom_bar(stat="identity") 
+png("GO-p108-UP.png",width = 15, height = 15, units = "cm",res=500)
+print(p + scale_fill_manual(values=rep("steelblue2",dim(revigoUP.108top)[1])) + theme_minimal() + theme(legend.position = "none") + 
+        ylab(''))
+dev.off()
+```
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO-UP.png" width="800">
 
 ### GSEA 
 

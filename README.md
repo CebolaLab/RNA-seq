@@ -80,11 +80,12 @@ STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFast
 STAR can then be run to align the `fastq` raw data to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should be unsorted, as required for the downstream quantification step using Salmon. The following options are shown according to the ENCODE recommendations. For single-end data:
 
 ```
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>.fastq.gz --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend
---outFilterType BySJout --alignSJoverhangMin 8 --outFilterMultimapNmax 20
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>.fastq.gz 
+--outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout 
+--alignSJoverhangMin 8 --outFilterMultimapNmax 20
 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999
---outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 --alignIntronMax 1000000
---alignMatesGapMax 1000000 
+--outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 
+--alignIntronMax 1000000 --alignMatesGapMax 1000000 
 --quantMode TranscriptomeSAM --outSAMattributes NH HI AS NM MD
 ```
 

@@ -63,7 +63,7 @@ A html report is generated, including the following information:
 
 The raw RNA-seq data in `fastq` format will be aligned to the reference genome, along with a reference transcriptome, to output two alignment files: the genome alignment and the transcriptome alignemnt. 
 
-The DNA reads are aligned using the splice-aware aligner, STAR. Here, [STAR](https://github.com/alexdobin/STAR) is used. The manual is available [here](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf). The reference genome used is the GRCh38 'no-alt' assembly from ncbi, recommended by [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use). The genome can be downloaded at [this link](ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz).  This version of the recent GRCh38 reference genome excludes alternative contigs which may cause fragments to map in multiple locations. The downloaded genome should be indexed with STAR. Other sources recommend the Ensembl [Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz](ftp://ftp.ensembl.org/pub/release-77/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz), however [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use) notes that this version of the genome includes multi-placed sequences such as the pseudo-autosomal regions on both chromosomes Z and Y, as well as some alpha satellites. 
+The DNA reads are aligned using the splice-aware aligner, STAR. Here, [STAR](https://github.com/alexdobin/STAR) is used. The manual is available [here](https://github.com/alexdobin/STAR/blob/master/doc/STARmanual.pdf). The reference genome used is the GRCh38 'no-alt' assembly from ncbi, recommended by [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use). The genome can be downloaded using `wget ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz`.  This version of the recent GRCh38 reference genome excludes alternative contigs which may cause fragments to map in multiple locations. The downloaded genome should be indexed with STAR. Other sources recommend the Ensembl [Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz](ftp://ftp.ensembl.org/pub/release-77/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz), however [Heng Li](http://lh3.github.io/2017/11/13/which-human-reference-genome-to-use) notes that this version of the genome includes multi-placed sequences such as the pseudo-autosomal regions on both chromosomes Z and Y, as well as some alpha satellites. 
 
 > Index the reference genome
 
@@ -491,7 +491,7 @@ revigoUP$description <- factor(revigoUP.108top$description, levels = revigoUP.10
 #Plot the barplot
 p<-ggplot(data=revigoUP.108top, aes(x=log10.p.value, y=description, fill=description)) +
   geom_bar(stat="identity") 
-  
+
 p + scale_fill_manual(values=rep("steelblue2",dim(revigoUP.108top)[1])) + theme_minimal() + theme(legend.position = "none") + 
         ylab('')
 ```
@@ -499,6 +499,11 @@ p + scale_fill_manual(values=rep("steelblue2",dim(revigoUP.108top)[1])) + theme_
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO-UP.png" width="800">
 
 ### GSEA 
+
+```R
+BiocManager::install("piano")
+library(piano)
+```
 
 
 **Preseq**: Estimates library complexity

@@ -103,12 +103,16 @@ samtools merge <sample>-merged.bam <sample>_L001.bam <sample>_L002.bam <sample>_
 
 First, QC reports will be generated using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html). Run on either the `<sample>.gzAligned.out.bam` or `<sample>.merged.bam`.
 
-```
+The transcript annotation file, `gencode.v35.annotation.gtf` can be downloaded from [gencode](https://www.gencodegenes.org/human/).
+
+```bash
 samtools sort <sample>.merged.bam > <sample>-sorted.bam
 
-qualimap bamqc -bam <sample>-sorted.bam -gtf ENCFF159KBI.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
+qualimap bamqc -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
 
-qualimap rnaseq -bam <sample>-sorted.bam -gff ENCFF159KBI.gtf -outdir <sample>-rnaseq-qualimap-reports --java-mem-size=16G
+qualimap rnaseq -bam <sample>-sorted.bam -gff gencode.v35.annotation.gtf -outdir <sample>-rnaseq-qualimap-reports --java-mem-size=16G
+
+#Removed ENCFF159KBI.gtf
 ```
 
 Qualimap can then run QC on combined samples. One included analysis is principal component analysis, which clusters the samples. This can be used to confirm whether technical and biological replicates cluster together. A text file should be created with 

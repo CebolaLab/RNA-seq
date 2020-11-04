@@ -41,14 +41,13 @@ These fastQC reports can be combined into one summary report using [multiQC](htt
 
 #### Adapter trimming 
 
-If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. 
+If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. For **paired-end** data:
 
 ```bash
-fastp -i <sample>_R1.fastq.gz -O <sample>_R1.trimmed.fastq.g -I <sample>_R2.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
+fastp -i <sample>_R1.fastq.gz -O <sample>_R1.trimmed.fastq.gz -I <sample>_R2.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
 ```
 
-For single-end reads: (note the adapter detection is not always as effective for single-end reads, so it is advisable to provide the adapter sequence, here the 'Illumina TruSeq Adapter Read 1'):
-
+For **single-end** reads: (note the adapter detection is not always as effective for single-end reads, so it is advisable to provide the adapter sequence, here the 'Illumina TruSeq Adapter Read 1'):
 
 ```bash
 fastp -i <sample>.fastq.gz -o <sample>-trimmed.fastq.gz -a AGATCGGAAGAGCACACGTCTGAACTCCAGTCA -l 25 -j <sample>.fastp.json -h <sample>.fastp.html 
@@ -77,10 +76,13 @@ STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFast
 
 > Carry out the alignment
 
-STAR can then be run to align the `fastq` raw data to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should be unsorted, as required for the downstream quantification step using Salmon. The following options are shown according to the ENCODE recommendations. For single-end data:
+STAR can then be run to align the `fastq` raw data to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should be unsorted, as required for the downstream quantification step using Salmon. The following options are shown according to the ENCODE recommendations. 
+
+
+For **paired-end** data:
 
 ```bash
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>.fastq.gz 
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.trimmed.fastq.gz <sample>_R2.trimmed.fastq.gz
 --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout 
 --alignSJoverhangMin 8 --outFilterMultimapNmax 20
 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999
@@ -88,6 +90,20 @@ STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>.fastq.gz
 --alignIntronMax 1000000 --alignMatesGapMax 1000000 
 --quantMode TranscriptomeSAM --outSAMattributes NH HI AS NM MD
 ```
+
+For **single-end** data:
+
+```bash
+STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>-trimmed.fastq.gz 
+--outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout 
+--alignSJoverhangMin 8 --outFilterMultimapNmax 20
+--alignSJDBoverhangMin 1 --outFilterMismatchNmax 999
+--outFilterMismatchNoverReadLmax 0.04 --alignIntronMin 20 
+--alignIntronMax 1000000 --alignMatesGapMax 1000000 
+--quantMode TranscriptomeSAM --outSAMattributes NH HI AS NM MD
+```
+
+*Hint: all the above code should be on one line!*
 
 For compatibility with the STAR quantification, the `--quantMode TranscriptomeSAM` option will result in the output of two alignment files, one to the reference genome (`Aligned.*.sam/bam`) and one to the transcriptome (`Aligned.toTranscriptome.out.bam`).
 

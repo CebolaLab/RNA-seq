@@ -130,7 +130,7 @@ qualimap bamqc -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir 
 qualimap rnaseq -bam <sample>-sorted.bam -gff gencode.v35.annotation.gtf -outdir <sample>-rnaseq-qualimap-reports --java-mem-size=16G
 ```
 
-Qualimap can then run QC on combined samples. One included analysis is principal component analysis, which is used to cluster the samples. This can be used to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
+Qualimap can then run QC on combined samples. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
 
 *Note, some versions of qualimap require the raw_data_qualimapReport directory to be renamed to raw_data.*
 
@@ -146,47 +146,9 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 It is generally recommended to *not* remove duplicates when working with RNA-seq data, unless using UMIs (unique molecular identifiers) [(Klepikova et al. 2017)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/). This is because there are likely to be DNA molecules which are natural duplicates of each other, for example originating from genes with a shared sequence in a common domain. Typically, removing duplicates does more harm than good. It is more or less impossible to remove duplicates from single-end data and research has also suggested it may cause false negatives when applied to paired end data. See more in [this useful blog post](https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/). Generally, duplicates are not a problem so long as the *library complexity is high*. 
 
-
-### Compute GC bias
-
-GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
-
-It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. When generating `bedGraph/BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
-
-The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
-The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
-Set the `-l` argument to your fragment length.
-
-The input `bam` file requires an index, which can be generated using `samtools index`.
-
-```bash
-deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
-```
-
-The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
-
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.png" width="500">
-
-The GC-bias will later be corrected when normalising the data for DGE analysis. However, for visualisation purposes, the user may wish to correct the GC-bias for the corresponding bigWig file.
-
-If opting to correct the GC-bias, `correctGCbias` can be used. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and removes reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
-
-```bash
- correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
-```
-
-**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNAs-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
-
 ### Check correlation of technical and biological replicates
 
-The correlation between `bam` files of biological and/or technical replicates can be calculated as a QC step to ensure that the expected replicates positively correlate. 
-
-```bash
-multiBamSummary 
-
-plotCorrelation
-```
-
+The correlation between `bam` files of biological and/or technical replicates can be calculated as a QC step to ensure that the expected replicates positively correlate. Deeptools [multiBamSummary](https://deeptools.readthedocs.io/en/develop/content/tools/multiBamSummary.html) and [plotCorrelation](https://deeptools.readthedocs.io/en/develop/content/tools/plotCorrelation.html) are useful tools for further investigation.
 
 ## Quantification
 
@@ -204,12 +166,19 @@ gffread -w GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa -g GCA_00000140
 
 Salmon is here used with the expectation minimisation (EM)/VBEM? approach method for quantification. This is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the EM approach attributes reads to the most likely transcript. Technical replicates can also be combined by providing the Salmon `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`). Here, Salmon is run ***without*** any normalisation, on each technical replicate; samples are combined and normalised in the next steps.
 
+For **paired-end** data:
+
 ```bash
 salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
 ```
 
+For **single-end** data:
+
 If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. If listing multiple files to be combined, the library type will need to be specified, as Salmon cannot determine it automatically (see the Salmon documentation for more information).
 
+```bash
+salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType ?? -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant  --fldMean ?? --fldSD ??
+```
 
 ## Differential expression
 
@@ -567,6 +536,37 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 $salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF0005790/p53-rep2-L002.gzAligned.toTranscriptome.out.bam -o "$sampleID".salmon_quant --fldMean $mean --fldSD 75 --seqBias --gcBias 
 
 
+
+
+### Compute GC bias
+
+GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
+
+It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. When generating `bedGraph/BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
+
+The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
+The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
+Set the `-l` argument to your fragment length.
+
+The input `bam` file requires an index, which can be generated using `samtools index`.
+
+```bash
+deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
+```
+
+The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.png" width="500">
+
+The GC-bias will later be corrected when normalising the data for DGE analysis. However, for visualisation purposes, the user may wish to correct the GC-bias for the corresponding bigWig file.
+
+If opting to correct the GC-bias, `correctGCbias` can be used. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and removes reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
+
+```bash
+ correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
+```
+
+**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNAs-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
 
 
 ## Visualisation 

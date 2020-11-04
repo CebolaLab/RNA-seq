@@ -122,7 +122,8 @@ First, QC reports will be generated using [qualimap](http://qualimap.bioinfo.cip
 The transcript annotation file, `gencode.v35.annotation.gtf` can be downloaded from [gencode](https://www.gencodegenes.org/human/).
 
 ```bash
-samtools sort <sample>.merged.bam > <sample>-sorted.bam
+#Sort the output bam file. The suffix of the .bam input file may be .gzAligned.out.bam, or -merged.bam. Edit this code to include the appropriate file name.
+samtools sort <sample>.bam > <sample>-sorted.bam
 
 qualimap bamqc -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
 

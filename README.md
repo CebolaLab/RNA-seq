@@ -338,55 +338,16 @@ print(p)
 
 ### Differential gene expression
 
-
 There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation.
 
 ```R
 library(apeglm)
-ins.LFC <- lfcShrink(dds, coef="condition_insulin_vs_control", type="apeglm")
-```
 
+#list the names of the coefficients and choose your comparison
+resultsNames(dds)
 
-### Filter genes 
-
-There are likely to be many annotated genes which are not expressed in your samples. To avoid these influencing the downstream results, they should be removed at this stage. In order to account for the varying library size, it is recommended to filter genes based on their 'count per million' (CPM) expression. (The count number is divided by the total count number for the sample, divided by one million). The edgeR package includes a handy tool, `filterByExpr`, which carrys out informative gene filtering. 
-
-```R
-#The groups can be updated to reflect the biological replicates
-groups=unique(samples[,3:4])
-
-#The genes are filtered to remove those with low expression
-library(edgeR)
-
-counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
-```
-
-
-### Differential expression analysis
-
-```R
-offset=cqn.results$glm.offset
-
-#Make the edgeR DGEList object and input the cqn offset
-y <- DGEList(counts=counts.combined,group=groups[,2])
-y$offset <- offset
-
-#If you wish all the comparisons to be relative to your first group (e.g. a control), remove the 0+
-design <- model.matrix(~ 0+group,data=group)
-y <- estimateGLMCommonDisp(y, design = design)
-
-#Run the quasi-likelihood, glm fit
-QLfit <- glmQLFit(y,design)
-```
-
-To carry out the differential expression comparison, the groups to be compared should first be defined. Here, it is assumed that each group contained two or more biological replicates. 
-
-```R
-#Replace 'group1' and 'group 2' with the names of your groups which you wish to compare
-contrast1=makeContrasts(group2-group1)
-
-ql.groups12=glmQLFTest(QLfit, contrast=contrast1, levels=design)
-
+###substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
+LFC <- lfcShrink(dds, coef="????", type="apeglm")
 ```
 
 ### QC plots

@@ -284,7 +284,7 @@ RPKM.cqn <- cqn.results$y + cqn.results$offset
 
 ### Import data to DEseq2 
 
-An excellent tutorial on how DEseq2 works, including how different expression is calculated, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson. 
+An excellent tutorial on how DEseq2 works, including how different expression is calculated including dispersion estimates, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson. 
 
 The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any effects to be controlled for. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. Other covariants such as age could be added, for example. 
 
@@ -394,12 +394,12 @@ cor(RPKM.cqn[,1], RPKM.cqn[,2])
 text(x, y, labels = paste0('r=', round(cor(RPKM.cqn[,1], RPKM.cqn[,2]),2)))
 
 #To add a regression line
-abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col='red')
+abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col = 'red')
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
 
-#### MD plot
+#### MA plot
 
 An MA plot is a scatter plot of the log fold-change between two samples against the average gene expression (mean of normalised counts). An MA plot can be generated using the following command from DEseq2:
 
@@ -437,14 +437,15 @@ Volcano plots are generated as described by [Ignacio González](http://www.natha
 ```R
 #Allow for more space around the borders of the plot
 par(mar = c(5, 4, 4, 4))
-#Set your log-fold-change and p-value thresholds 
+
+#Set your log-fold-change and p-value thresholds
 lfc = 2
 pval = 0.05
 
-tab = data.frame(logFC = LFC$log2FoldChange, negLogPval = -log10(LFC$padj))
+tab = data.frame(logFC = LFC$log2FoldChange, negLogPval = -log10(LFC$padj))#make a data frame with the log2 fold-changes and adjusted p-values
 
 plot(tab, pch = 16, cex = 0.4, xlab = expression(log[2]~fold~change),
-     ylab = expression(-log[10]~pvalue),main='???')
+     ylab = expression(-log[10]~pvalue), main = '???') #replace main = with your title
 
 #Genes with a fold-change greater than 2 and p-value<0.05:
 signGenes = (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))

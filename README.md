@@ -313,7 +313,7 @@ vst_mat <- assay(vst)
 pca <- prcomp(t(vst_mat))
 ```
 
-Plot the results
+The results can be plotted using ggplot2.
 
 ```R
 library(ggplot2)
@@ -333,13 +333,8 @@ print(p)
 #dev.off()
 ```
 
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="500">
 
-sample-level QC using Principal Component Analysis (PCA)
-
-A useful tutorial on PCA and heirarchical clustering is available [here](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md).
-
-If you have few samples, it is recommended to use `rld` transformation.
-If you have >20 samples, it may be faster to use `vst`
 
 ### Differential gene expression
 

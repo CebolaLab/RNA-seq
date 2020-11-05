@@ -371,7 +371,7 @@ Before moving on to functional analysis, such as gene set enrichment analysis, q
 
 #### Biological replicate correlation
 
-The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` can be used 
+The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` will be used. 
 
 ```R
 #To test the correlation between the first two samples in columns 1 and 2
@@ -380,11 +380,14 @@ plot(RPKM.cqn[,1],RPKM.cqn[,2],pch=18,cex=0.5,xlab=colnames(RPKM.cqn)[1],ylab=co
 #The Pearson correlation coefficient can be calculated as:
 cor(RPKM.cqn[,1],RPKM.cqn[,2])
 
-#To add it to your plot, replace x and y with the coordinates for your legend
+#Add it to your plot, replacing x and y with the coordinates for your legend
 text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
+
+#To add a regression line
+abline(lm(RPKM.cqn[,1]~RPKM.cqn[,2]),col='red')
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-replicates-exp-logcqn.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/rep-correlation.png" width="800">
 
 #### MD plot
 

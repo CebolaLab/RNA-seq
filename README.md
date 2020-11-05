@@ -189,7 +189,7 @@ The differential expression analysis contains the following steps:
 - [Import count data](#import-count-data)
 - [Normalisation](#normalisation)
 - [Import data to DEseq2](#import-data-to-deseq2)
-- [Sample clustering (PCA)](#sample-clustering-(pca))
+- [Sample clustering (PCA)](#sample-clustering)
 - [Differential gene expression](#differential-gene-expression)
 - [QC plots](#qc-plots)
 
@@ -296,7 +296,7 @@ resultsNames(dds) #lists the coefficients
 normalizationFactors(dds) <- cqnNormFactors
 ```
 
-### Sample clustering (PCA)
+### Sample clustering
 
 A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)). Useful resources include this [blog post](https://builtin.com/data-science/step-step-explanation-principal-component-analysis) by Zakaria Jaadi and a [video](https://www.youtube.com/watch?v=_UVHneBUBW0) on PCA by StatQuest. 
 

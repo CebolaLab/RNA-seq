@@ -318,19 +318,24 @@ The results can be plotted using ggplot2.
 ```R
 library(ggplot2)
 
+#plotPCA from DEseq2 plots using the top 500 genes:
+data=plotPCA(rld, intgroup=c("condition","batch"),returnData=TRUE)
+p<-ggplot(data,aes(x=PC1,y=PC2,color=condition ))
+p<-p+geom_point()+theme 
+print(p)
+
+#Alternatively, PCA can be carried out using all genes:
 df_out <- as.data.frame(pca$x)
 df_out$group <- samples[,3]
 
 #Include the next two lines to add the PC % to the axis labels
-percentage <- round(pca$sdev / sum(pca$sdev) * 100, 2)
-percentage <- paste( colnames(df_out), paste0(" (", as.character(percentage), "%", ")"), sep="") 
+#percentage <- round(pca$sdev / sum(pca$sdev) * 100, 2)
+#percentage <- paste( colnames(df_out), paste0(" (", as.character(percentage), "%", ")"), sep="") 
 
 p<-ggplot(df_out,aes(x=PC1,y=PC2,color=group ))
-p<-p+geom_point()+theme + xlab(percentage[1]) + ylab(percentage[2])
+p<-p+geom_point()+theme #+ xlab(percentage[1]) + ylab(percentage[2])
 
-#png()
 print(p)
-#dev.off()
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="300">

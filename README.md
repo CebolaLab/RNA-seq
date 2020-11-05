@@ -295,7 +295,7 @@ normalizationFactors(dds) <- cqnNormFactors
 
 ### Sample clustering (PCA)
 
-A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from the [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)).
+A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)).
 
 **If you have few samples:**
 
@@ -305,7 +305,7 @@ rld_mat <- assay(rld)
 pca <- prcomp(t(rld_mat))
 ```
 
-**If you have more samples** e.g. >20:
+**If you have more samples** (e.g. >20), the vst transformation will be faster:
 
 ```R
 vst.r<-vst(dds,blind=TRUE)

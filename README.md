@@ -199,59 +199,156 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
 BiocManager::install("cqn")
-BiocManager::install("edgeR")
 BiocManager::install("DESeq2")
 BiocManager::install("tximport")
 ```
 
 ### Import count data
 
-The output files from salmon, `quant.sf` will be imported into `R` using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson).
+The output from Salmon are TPM counts (transcripts per million) mapped to transcripts. These will be converted into non-normalised counts and combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
 
-The most straightforward way is to first create a file containing the paths to the `quant.sf` files, the sample names and the group. This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. In this example, column 1 shows the path to the `quant.sf` file, column 2 shows the sample name, column 3 shows the technical replicate group and column 4 shows the biological replicate group.
+1) **Create a matrix containing the sample IDs**. The matrix should have at least three columns: the first with the sample ID, the second with the path to the salmon `quant.sf` files, and the third with the group (e.g. treatment or sample). This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. 
 
+```R
+#Read in the files with the sample information
+samples=read.table('samples.txt')
+```
+
+2) Read in the transcript to gene ID file provided in this repository (generated from gencode v35).
+
+```R
+#Read in the gene/transcript IDs 
+tx2gene=read.table('tx2gene.txt',sep='\t')
+```
+
+3) Read in the count data using the tximport package. This will combine the transcript-level counts to gene-level. 
 
 ```R
 library(tximport)
 
-#Read in the files with the sample information and the gene/transcript IDs (provided in this repository)
-samples=read.table('samples.txt')
-tx2gene=read.table('tx2gene.txt',sep='\t')
-
-#Column 1, samples[,1], contains the paths to the quant.sf files
-counts.imported=tximport(files=as.character(samples[,1]),type='salmon',tx2gene=tx2gene)
-
-#Extract the count data
-counts=counts.imported$counts
-
-#Label the columns by the sample name
-colnames(counts)=samples[,2]
-
+#Column 2 of samples, samples[,2], contains the paths to the quant.sf files
+counts.imported=tximport(files=as.character(samples[,2]),type='salmon',tx2gene=tx2gene)
 ```
 
-The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation, `cqn` is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) in order to correct for sample-specific biases. cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
+The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation (cqn) is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) to correct for sample-specific biases. Cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
 
-
-`cqn` requires an input of the gene lengths, gc contents and the estimated library size (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `edgeR`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu.
+`cqn` requires an input of gene length, gc content and the estimated library size per sample (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `DESeq2`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu and the [tximport vignette](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson.
 
 ```R
 #Read in the gene lengths and gc-content data frame (provided in this repository)
 genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
 ```
 
-At this stage, technical replicates can be combined. This is typically achieved by summing the counts. There are three groups in the below example:
+At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
+
+
+### Normalisation 
 
 ```R
-#Create a list with the samples names (samples[,2]) by group (samples[,3])
-groups=split(as.character(samples[,2]), samples[,3])
+library(cqn)
+#cqn normalisation
+counts=counts.imported$counts
 
-#Create a matrix to contain the new counts from the combined technical replicates
-counts.combined=matrix(nrow=nrow(counts),ncol=length(groups),dimnames=list(rownames(counts),names(groups)))
+#Exclude genes with no length information, for compatibility with cqn.
+counts=counts[-which(is.na(genes.length.gc[rownames(counts),]$length)),]
 
-#For each group, sum the number of counts across the replicates
-for(x in names(groups)){
-  counts.combined[,x]=apply(counts[,groups[[x]]],1,sum)}
+#Extract the lengths and GC contents for genes in the same order as the counts data-frame
+geneslengths=genes.length.gc[rownames(counts),]$length
+genesgc=genes.length.gc[rownames(counts),]$gc
+
+#Run the cqn normalisation 
+cqn.results<-cqn(counts, genesgc, geneslengths, lengthMethod = c("smooth"))
+
+#Extract the offset, which will be input directly into DEseq2 to normalise the counts. 
+cqnoffset <- cqn.results.DEseq$glm.offset
+cqnNormFactors <- exp(cqnoffset)
+
+#The 'counts' object imported from tximport also contains data-frames for 'length' and 'abundance'.
+#These data-frames should also be subset to remove any genes excluded from the 'NA' length filter
+counts.imported$abundance=counts.imported$abundance[rownames(counts),]
+counts.imported$counts=counts.imported$counts[rownames(counts),]
+counts.imported$length=counts.imported$length[rownames(counts),]
 ```
+
+The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2, to which the cqn offset will be added, using a negative bionomial model. 
+
+```R
+#The normalised gene expression counts can be saved as:
+RPKM.cqn<-cqn.results$y + cqn.results$offset
+```
+
+The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any batch effects. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. 
+
+
+```R
+#Import to DEseq2
+counts.DEseq=DESeqDataSetFromTximport(counts.imported,colData=colData,design=~condition+batch)
+
+dds <- DESeq(counts.DEseq)
+resultsNames(dds) # lists the coefficients
+
+#Add the normalisation offset from cqn
+normalizationFactors(dds) <- cqnNormFactors
+```
+
+### Sample clustering
+
+A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA), which clusters data 
+
+**If you have few samples:**
+
+```R
+rld <- rlog(dds, blind=TRUE)
+rld_mat <- assay(rld)
+pca <- prcomp(t(rld_mat))
+```
+
+**If you have more samples** e.g. >20:
+
+```R
+vst.r<-vst(dds,blind=TRUE)
+vst_mat <- assay(vst)
+pca <- prcomp(t(vst_mat))
+```
+
+Plot the results
+
+```R
+library(ggplot2)
+
+df_out <- as.data.frame(pca$x)
+df_out$group <- samples[,3]
+
+#Include the next two lines to add the PC % to the axis labels
+percentage <- round(pca$sdev / sum(pca$sdev) * 100, 2)
+percentage <- paste( colnames(df_out), paste0(" (", as.character(percentage), "%", ")"), sep="") 
+
+p<-ggplot(df_out,aes(x=PC1,y=PC2,color=group ))
+p<-p+geom_point()+theme + xlab(percentage[1]) + ylab(percentage[2])
+
+#png()
+print(p)
+#dev.off()
+```
+
+
+sample-level QC using Principal Component Analysis (PCA)
+
+A useful tutorial on PCA and heirarchical clustering is available [here](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md).
+
+If you have few samples, it is recommended to use `rld` transformation.
+If you have >20 samples, it may be faster to use `vst`
+
+### Differential gene expression
+
+
+There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation.
+
+```R
+library(apeglm)
+ins.LFC <- lfcShrink(dds, coef="condition_insulin_vs_control", type="apeglm")
+```
+
 
 ### Filter genes 
 
@@ -267,24 +364,6 @@ library(edgeR)
 counts.combined=counts.combined[filterByExpr(counts.combined,design=groups[,2]),]
 ```
 
-### Normalisation 
-
-```R
-library(cqn)
-
-#Extract the gene lengths and gc-content from the genes.length.gc data frame
-#By subsetting using the counts.combined rownames, the rows will be the same order
-geneslengths=genes.length.gc[rownames(counts.combined),]$length
-genesgc=genes.length.gc[rownames(counts.combined),]$gc
-
-#Run cqn
-cqn.results<-cqn(counts.combined, genesgc, geneslengths, lengthMethod = c("smooth")) 
-
-#The normalised valies can be saves as:
-RPKM.cqn<-cqn.results$y + cqn.results$offset
-```
-
-The normalised counts can be obtained using `cqn.results$y + cqn.results$offset`. For the following analysis, the `cqn.results$glm.offset` will be input into the edgeR differential expression analysis.
 
 ### Differential expression analysis
 
@@ -589,6 +668,10 @@ There are multiple methods available for normalisation. Recent analysis by [Abra
 ## Resources
 
 Many resources were used in building this RNA-seq tutorial.
+
+Highly recommended RNA-seq tutorial series:
+
+- [Introduction to differential gene expression analysis](https://hbctraining.github.io/DGE_workshop/lessons/01_DGE_setup_and_overview.html#rna-seq-count-distribution)
 
 Other RNA-seq tutorials:
 - [Statistical analysis of RNA-Seq data](http://www.nathalievialaneix.eu/doc/pdf/tutorial-rnaseq.pdf) by Ignacio Gonz´alez 

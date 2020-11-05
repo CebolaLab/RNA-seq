@@ -204,6 +204,7 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 BiocManager::install("cqn")
 BiocManager::install("DESeq2")
 BiocManager::install("tximport")
+BiocManager::install("biomaRt")
 ```
 
 ### Import count data
@@ -486,8 +487,52 @@ sum(!is.na(padj) & padj<0.05 & log2FoldChange>0) #any fold-change
 sum(!is.na(padj) & padj<0.05 & log2FoldChange>2) #fold-change greater than 2
 ```
 
+2) **What are the top genes?**
 
+```R
+#At this stage it may be useful to create a copy of the results with the gene version removed from the gene name, to make it easier for you to search for the gene name etc. 
+#The rownames currently appear as 'ENSG00000175197.12, ENSG00000128272.15' etc.
+#To change them to 'ENSG00000175197, ENSG00000128272'
+LFC.gene=as.data.frame(LFC)
 
+#Some gene names are repeated if they are in the PAR region of the Y chromosome. Since dataframes cannot have duplicate row names, we will leave these gene names as they are and rename the rest.
+whichgenes=which(!grepl('PAR',rownames(LFC.gene)))
+rownames(LFC.gene)[whichgenes]=unlist(lapply(strsplit(rownames(LFC.gene)[whichgenes],'\\.'),'[[',1))
+
+#subset the significant genes
+LFC.sig=LFC.gene[padj<0.05 & !is.na(padj),]#subset the significant genes
+
+#We can add a column with the HGNC gene names
+library(biomaRt)
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+
+converted<-getBM(attributes=c('hgnc_symbol','ensembl_gene_id'), filters = 'ensembl_gene_id',
+                 values = rownames(LFC.sig),mart = ensembl)
+
+#Add gene names to the LFC.sig data-frame
+LFC.sig$hgnc=converted[converted[,2]==rownames(LFC.sig),1]
+
+#View the top 10 genes with the most significant (adjusted) p-values
+head(LFC.sig,n=10)
+
+#The largest fold-changes with a significant p-value
+LFC.sig[order(abs(LFC.sig$log2FoldChange),decreasing=TRUE),][1:10,] #add the [1:10,] to see the top 10 rows
+```
+
+3) **Can I plot the expression for the top genes?**
+
+```R
+#Select your chosen gene 
+tmp=plotCounts(dds, gene=grep('ENSG00000000003',names(dds),value=TRUE),intgroup="condition",pch=18,main='??? expression',returnData = TRUE)
+
+theme<-theme(panel.background = element_blank(),panel.border=element_rect(fill=NA),
+             plot.title = element_text(hjust = 0.5))
+
+p<-ggplot(tmp,aes(x=condition,y=count)) + geom_boxplot() + 
+  geom_dotplot(binaxis='y', stackdir='center', dotsize=0.6) + ggtitle('??? expression') + theme
+  
+print(p)
+```
 
 ## Functional analysis
 

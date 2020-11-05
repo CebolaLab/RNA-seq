@@ -222,7 +222,7 @@ samples = read.table('samples.txt')
 
 ```R
 #Read in the gene/transcript IDs 
-tx2gene = read.table('tx2gene.txt', sep='\t')
+tx2gene = read.table('tx2gene.txt', sep = '\t')
 ```
 
 3) **Read in the count data using `tximport`**. This will combine the transcript-level counts to gene-level. 
@@ -231,7 +231,7 @@ tx2gene = read.table('tx2gene.txt', sep='\t')
 library(tximport)
 
 #Column 2 of samples, samples[,2], contains the paths to the quant.sf files
-counts.imported = tximport(files=as.character(samples[,2]), type = 'salmon', tx2gene = tx2gene)
+counts.imported = tximport(files = as.character(samples[,2]), type = 'salmon', tx2gene = tx2gene)
 ```
 
 ### Normalisation 
@@ -242,7 +242,7 @@ The count data needs to be normalised for several confounding factors. The numbe
 
 ```R
 #Read in the gene lengths and gc-content data frame (provided in this repository)
-genes.length.gc = read.table('gencode-v35-gene-length-gc.txt',sep='\t')
+genes.length.gc = read.table('gencode-v35-gene-length-gc.txt', sep = '\t')
 ```
 
 At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
@@ -292,7 +292,7 @@ The design, as shown below, should read `~ batch + condition`, where batch is an
 
 ```R
 #Import to DEseq2
-counts.DEseq = DESeqDataSetFromTximport(counts.imported, colData=colData, design = ~batch + condition)
+counts.DEseq = DESeqDataSetFromTximport(counts.imported, colData = colData, design = ~batch + condition)
 
 dds <- DESeq(counts.DEseq)
 resultsNames(dds) #lists the coefficients
@@ -312,7 +312,7 @@ library(apeglm)
 resultsNames(dds)
 
 #Substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
-LFC <- lfcShrink(dds, coef="????", type="apeglm")
+LFC <- lfcShrink(dds, coef = "????", type = "apeglm")
 ```
 
 The contens of the `LFC` dataframe contain the log2 fold-change, as well as the p-value and adjusted p-value:
@@ -338,7 +338,7 @@ A common component of analysing RNA-seq data is to carry out QC by testing if ex
 **If you have few samples:**
 
 ```R
-rld <- rlog(dds, blind=TRUE)
+rld <- rlog(dds, blind = TRUE)
 rld_mat <- assay(rld)
 pca <- prcomp(t(rld_mat))
 ```
@@ -346,7 +346,7 @@ pca <- prcomp(t(rld_mat))
 **If you have more samples** (e.g. >20), the vst transformation will be faster:
 
 ```R
-vst.r<-vst(dds,blind=TRUE)
+vst.r <- vst(dds,blind = TRUE)
 vst_mat <- assay(vst)
 pca <- prcomp(t(vst_mat))
 ```
@@ -357,9 +357,9 @@ The results can be plotted using ggplot2.
 library(ggplot2)
 
 #plotPCA from DEseq2 plots uses the top 500 genes:
-data=plotPCA(rld, intgroup=c("condition","batch"),returnData=TRUE)
-p<-ggplot(data,aes(x=PC1,y=PC2,color=condition ))
-p<-p+geom_point()+theme 
+data = plotPCA(rld, intgroup = c("condition", "batch"), returnData = TRUE)
+p <- ggplot(data, aes(x = PC1, y = PC2, color = condition ))
+p <- p + geom_point() + theme 
 print(p)
 
 #Alternatively, PCA can be carried out using all genes:
@@ -370,8 +370,8 @@ df_out$group <- samples[,3]
 #percentage <- round(pca$sdev / sum(pca$sdev) * 100, 2)
 #percentage <- paste( colnames(df_out), paste0(" (", as.character(percentage), "%", ")"), sep="") 
 
-p<-ggplot(df_out,aes(x=PC1,y=PC2,color=group ))
-p<-p+geom_point()+theme #+ xlab(percentage[1]) + ylab(percentage[2])
+p <- ggplot(df_out, aes(x = PC1, y = PC2, color = group))
+p <- p + geom_point() + theme #+ xlab(percentage[1]) + ylab(percentage[2])
 
 print(p)
 ```
@@ -385,16 +385,16 @@ The correlation between the expression of genes in two biological replicates sho
 
 ```R
 #To test the correlation between the first two samples in columns 1 and 2
-plot(RPKM.cqn[,1],RPKM.cqn[,2],pch=18,cex=0.5,xlab=colnames(RPKM.cqn)[1],ylab=colnames(RPKM.cqn)[2])
+plot(RPKM.cqn[,1], RPKM.cqn[,2], pch = 18, cex = 0.5, xlab = colnames(RPKM.cqn)[1], ylab = colnames(RPKM.cqn)[2])
 
 #The Pearson correlation coefficient can be calculated as:
-cor(RPKM.cqn[,1],RPKM.cqn[,2])
+cor(RPKM.cqn[,1], RPKM.cqn[,2])
 
 #Add it to your plot, replacing x and y with the coordinates for your legend
-text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
+text(x, y, labels = paste0('r=', round(cor(RPKM.cqn[,1], RPKM.cqn[,2]),2)))
 
 #To add a regression line
-abline(lm(RPKM.cqn[,1]~RPKM.cqn[,2]),col='red')
+abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col='red')
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
@@ -405,7 +405,7 @@ An MA plot is a scatter plot of the log fold-change between two samples against 
 
 ```R
 #Add a title to reflect your comparison 
-plotMA(LFC,main='???',cex=0.5)
+plotMA(LFC, main = '???', cex = 0.5)
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/MAplot.png" width="400">
@@ -416,10 +416,10 @@ The distribution of p-values following a differential expression analysis can be
 
 ```R
 #The distribution of p-values
-hist(LFC$pvalue,breaks=50,col='grey',main='???',xlab='p-value')
+hist(LFC$pvalue, breaks = 50, col = 'grey', main = '???', xlab = 'p-value')
 
 #The false-discovery rate distribution
-hist(LFC$padj,breaks=50,col='grey',main='???',xlab='Adjusted p-value')
+hist(LFC$padj, breaks = 50, col = 'grey', main = '???', xlab = 'Adjusted p-value')
 ```
 
 The p-value distribution:
@@ -477,17 +477,17 @@ How many genes are differentially expressed? What are the top DEGs? How do I plo
 attach(as.data.frame(LFC))
 
 #The total number of DEGs with an adjusted p-value<0.05
-sum(!is.na(padj) & padj<0.05)
+sum(!is.na(padj) & padj < 0.05)
 #The total number of DEGs with an adjusted p-value<0.05 AND absolute fold-change > 2
-sum(!is.na(padj) & padj<0.05 & abs(log2FoldChange)>2)
+sum(!is.na(padj) & padj < 0.05 & abs(log2FoldChange) >2)
 
 #Decreased expression:
-sum(!is.na(padj) & padj<0.05 & log2FoldChange<0) #any fold-change
-sum(!is.na(padj) & padj<0.05 & log2FoldChange<(-2)) #fold-change greater than 2
+sum(!is.na(padj) & padj < 0.05 & log2FoldChange <0) #any fold-change
+sum(!is.na(padj) & padj < 0.05 & log2FoldChange <(-2)) #fold-change greater than 2
 
 #Increased expression:
-sum(!is.na(padj) & padj<0.05 & log2FoldChange>0) #any fold-change
-sum(!is.na(padj) & padj<0.05 & log2FoldChange>2) #fold-change greater than 2
+sum(!is.na(padj) & padj < 0.05 & log2FoldChange >0) #any fold-change
+sum(!is.na(padj) & padj < 0.05 & log2FoldChange >2) #fold-change greater than 2
 ```
 
 2) **What are the top genes?**
@@ -496,43 +496,43 @@ sum(!is.na(padj) & padj<0.05 & log2FoldChange>2) #fold-change greater than 2
 #At this stage it may be useful to create a copy of the results with the gene version removed from the gene name, to make it easier for you to search for the gene name etc. 
 #The rownames currently appear as 'ENSG00000175197.12, ENSG00000128272.15' etc.
 #To change them to 'ENSG00000175197, ENSG00000128272'
-LFC.gene=as.data.frame(LFC)
+LFC.gene = as.data.frame(LFC)
 
 #Some gene names are repeated if they are in the PAR region of the Y chromosome. Since dataframes cannot have duplicate row names, we will leave these gene names as they are and rename the rest.
-whichgenes=which(!grepl('PAR',rownames(LFC.gene)))
-rownames(LFC.gene)[whichgenes]=unlist(lapply(strsplit(rownames(LFC.gene)[whichgenes],'\\.'),'[[',1))
-
+whichgenes = which(!grepl('PAR', rownames(LFC.gene)))
+rownames(LFC.gene)[whichgenes] = unlist(lapply(strsplit(rownames(LFC.gene)[whichgenes], '\\.'), '[[',1))
+ 
 #subset the significant genes
-LFC.sig=LFC.gene[padj<0.05 & !is.na(padj),]#subset the significant genes
+LFC.sig = LFC.gene[padj < 0.05 & !is.na(padj),]#subset the significant genes
 
 #We can add a column with the HGNC gene names
 library(biomaRt)
 ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
 
-converted<-getBM(attributes=c('hgnc_symbol','ensembl_gene_id'), filters = 'ensembl_gene_id',
-                 values = rownames(LFC.sig),mart = ensembl)
+converted <- getBM(attributes=c('hgnc_symbol','ensembl_gene_id'), filters = 'ensembl_gene_id',
+                 values = rownames(LFC.sig), mart = ensembl)
 
 #Add gene names to the LFC.sig data-frame
-LFC.sig$hgnc=converted[converted[,2]==rownames(LFC.sig),1]
+LFC.sig$hgnc = converted[converted[,2] == rownames(LFC.sig),1]
 
 #View the top 10 genes with the most significant (adjusted) p-values
-head(LFC.sig,n=10)
+head(LFC.sig, n = 10)
 
 #The largest fold-changes with a significant p-value
-LFC.sig[order(abs(LFC.sig$log2FoldChange),decreasing=TRUE),][1:10,] #add the [1:10,] to see the top 10 rows
+LFC.sig[order(abs(LFC.sig$log2FoldChange), decreasing = TRUE),][1:10,] #add the [1:10,] to see the top 10 rows
 ```
 
 3) **Can I plot the expression for the top genes?**
 
 ```R
 #Select your chosen gene 
-tmp=plotCounts(dds, gene=grep('ENSG00000000003',names(dds),value=TRUE),intgroup="condition",pch=18,main='??? expression',returnData = TRUE)
+tmp = plotCounts(dds, gene = grep('ENSG00000000003', names(dds), value = TRUE), intgroup = "condition", pch = 18, main = '??? expression', returnData = TRUE)
 
-theme<-theme(panel.background = element_blank(),panel.border=element_rect(fill=NA),
+theme <- theme(panel.background = element_blank(), panel.border = element_rect(fill = NA),
              plot.title = element_text(hjust = 0.5))
 
-p<-ggplot(tmp,aes(x=condition,y=count)) + geom_boxplot() + 
-  geom_dotplot(binaxis='y', stackdir='center', dotsize=0.6) + ggtitle('??? expression') + theme
+p <- ggplot(tmp, aes(x = condition, y = count)) + geom_boxplot() + 
+  geom_dotplot(binaxis = 'y', stackdir = 'center', dotsize = 0.6) + ggtitle('??? expression') + theme
 
 print(p)
 ```
@@ -554,10 +554,10 @@ BiocManager::install("goseq")
 library(goseq)
 
 #Extract the differential expression data, with false discovery rate correction
-groups12.table<-as.data.frame(topTags(ql.groups12,n= Inf))
+groups12.table <- as.data.frame(topTags(ql.groups12, n = Inf))
 
 #Remove the version numbers from the ENSEMBL gene IDs
-rownames(groups12.table)<-unlist(lapply(strsplit(rownames(groups12.table),'\\.'),`[[`,1))
+rownames(groups12.table) <- unlist(lapply(strsplit(rownames(groups12.table), '\\.'), `[[`, 1))
 ```
 
 The genes can be seperated into those which show significantly increased expression and those which show significantly decreased expression. Here, the FDR threshold is set to 0.05. A minimum fold-change can also be defined. 
@@ -566,8 +566,8 @@ The genes can be seperated into those which show significantly increased express
 #Decreased expression
 ql53.DEGs.down <- groups12.table$FDR < 0.05 & groups12.table$logFC<0
 names(ql53.DEGs.down) <- rownames(groups12.table)
-pwf.dn <- nullp(ql53.DEGs.up, "hg19","ensGene")
-go.results.dn <- goseq(pwf.dn, "hg19","ensGene")
+pwf.dn <- nullp(ql53.DEGs.up, "hg19", "ensGene")
+go.results.dn <- goseq(pwf.dn, "hg19", "ensGene")
 
 #Increased expression
 ql53.DEGs.up <- groups12.table$FDR < 0.05 & groups12.table$logFC>0
@@ -583,7 +583,7 @@ The `go.results.up` dataframe looks like this:
 Significant results can be saved...
 
 ```R
-write.table(go.results.up[go.results.up$over_represented_pvalue<0.05,1:2],'p53-GO-up0.05.txt',quote=FALSE,sep='\t',row.names=FALSE,col.names=FALSE)
+write.table(go.results.up[go.results.up$over_represented_pvalue<0.05,1:2], 'p53-GO-up0.05.txt', quote=FALSE, sep='\t', row.names=FALSE, col.names=FALSE)
 ```
 
 ...and uploaded to the REVIGO tool which collapses and summarises redundant GO terms. Copy the contents of the `p53-GO-up0.05.txt` into the [REVIGO](http://revigo.irb.hr/) box:
@@ -598,20 +598,20 @@ Save the downloaded file as `REVIGO-UP.csv`. The package `ggplot2` can be used h
 
 ```R
 #Read in the REVIGO output
-revigoUP=read.table('REVIGO-UP.csv',sep=',',header=TRUE)
+revigoUP = read.table('REVIGO-UP.csv', sep = ',', header = TRUE)
 
 #Sort by p-value and extract the top 20
-revigoUP=revigoUP[order(revigoUP$log10.p.value),]
-revigoUP=head(revigoUP,n=20)
+revigoUP = revigoUP[order(revigoUP$log10.p.value),]
+revigoUP = head(revigoUP, n = 20)
 
 #Convert the GO terms to factors for compatability with ggplot2
 revigoUP$description <- factor(revigoUP.108top$description, levels = revigoUP.108top$description)
 
 #Plot the barplot
-p<-ggplot(data=revigoUP.108top, aes(x=log10.p.value, y=description, fill=description)) +
-  geom_bar(stat="identity") 
+p <- ggplot(data = revigoUP.108top, aes(x = log10.p.value, y = description, fill = description)) +
+  geom_bar(stat = "identity") 
 
-p + scale_fill_manual(values=rep("steelblue2",dim(revigoUP.108top)[1])) + theme_minimal() + theme(legend.position = "none") + 
+p + scale_fill_manual(values = rep("steelblue2", dim(revigoUP.108top)[1])) + theme_minimal() + theme(legend.position = "none") + 
         ylab('')
 ```
 

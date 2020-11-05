@@ -318,7 +318,7 @@ The results can be plotted using ggplot2.
 ```R
 library(ggplot2)
 
-#plotPCA from DEseq2 plots using the top 500 genes:
+#plotPCA from DEseq2 plots uses the top 500 genes:
 data=plotPCA(rld, intgroup=c("condition","batch"),returnData=TRUE)
 p<-ggplot(data,aes(x=PC1,y=PC2,color=condition ))
 p<-p+geom_point()+theme 
@@ -355,9 +355,9 @@ resultsNames(dds)
 LFC <- lfcShrink(dds, coef="????", type="apeglm")
 ```
 
-The contens of the `LFC` dataframe look like:
+The contens of the `LFC` dataframe contain the log2 fold-change, as well as the p-value and adjusted p-value:
 
- <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="500">
+ <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="700">
 
 ### QC plots
 

@@ -387,7 +387,7 @@ text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 abline(lm(RPKM.cqn[,1]~RPKM.cqn[,2]),col='red')
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="500">
 
 #### MD plot
 

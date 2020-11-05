@@ -287,15 +287,15 @@ The counts information will be input into DEseq2. A data-frame called `colData` 
 counts.DEseq=DESeqDataSetFromTximport(counts.imported,colData=colData,design=~condition+batch)
 
 dds <- DESeq(counts.DEseq)
-resultsNames(dds) # lists the coefficients
+resultsNames(dds) #lists the coefficients
 
 #Add the normalisation offset from cqn
 normalizationFactors(dds) <- cqnNormFactors
 ```
 
-### Sample clustering
+### Sample clustering (PCA)
 
-A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA), which clusters data 
+A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from the [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)).
 
 **If you have few samples:**
 

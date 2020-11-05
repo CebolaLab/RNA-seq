@@ -271,15 +271,16 @@ counts.imported$counts=counts.imported$counts[rownames(counts),]
 counts.imported$length=counts.imported$length[rownames(counts),]
 ```
 
-The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2, to which the cqn offset will be added, using a negative bionomial model. 
+The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2 using a negative bionomial model, to which the cqn offset will be added. 
 
 ```R
 #The normalised gene expression counts can be saved as:
 RPKM.cqn<-cqn.results$y + cqn.results$offset
 ```
 
-The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any batch effects. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. 
+### Import data to DEseq2 
 
+The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any batch effects. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. 
 
 ```R
 #Import to DEseq2

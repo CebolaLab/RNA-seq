@@ -189,9 +189,9 @@ The differential expression analysis contains the following steps:
 - [Import count data](#import-count-data)
 - [Normalisation](#normalisation)
 - [Import data to DEseq2](#import-data-to-deseq2)
-- [Sample clustering (PCA)](#sample-clustering)
-- [Differential gene expression](#differential-gene-expression)
 - [QC plots](#qc-plots)
+- [Differential gene expression](#differential-gene-expression)
+
 
 Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways.  
 
@@ -296,7 +296,38 @@ resultsNames(dds) #lists the coefficients
 normalizationFactors(dds) <- cqnNormFactors
 ```
 
-### Sample clustering
+
+### Differential gene expression
+
+There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation.
+
+```R
+library(apeglm)
+
+#List the names of the coefficients and choose your comparison
+resultsNames(dds)
+
+#Substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
+LFC <- lfcShrink(dds, coef="????", type="apeglm")
+```
+
+The contens of the `LFC` dataframe contain the log2 fold-change, as well as the p-value and adjusted p-value:
+
+ <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="800">
+
+ Following quality control analysis, we will [explore the data](#data-exploration) to check the numbers of differentially expressed genes (DEGs), the top DGEs and pathways of differential expression.
+
+### QC plots
+
+Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
+
+- [Principal component analysis - sample clustering](#principal-component-analysis-sample-clustering)
+- [Biological replicate correlation](#biological-replicate-correlation)
+- [MD plot](#md-plot)
+- [p-value distribution](#p-value-distribution)
+- [Volcano plot](#volcano-plot)
+
+#### Principal component analysis - sample clustering
 
 A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)). Useful resources include this [blog post](https://builtin.com/data-science/step-step-explanation-principal-component-analysis) by Zakaria Jaadi and a [video](https://www.youtube.com/watch?v=_UVHneBUBW0) on PCA by StatQuest. 
 
@@ -342,34 +373,6 @@ print(p)
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="300">
-
-
-### Differential gene expression
-
-There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation.
-
-```R
-library(apeglm)
-
-#List the names of the coefficients and choose your comparison
-resultsNames(dds)
-
-#Substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
-LFC <- lfcShrink(dds, coef="????", type="apeglm")
-```
-
-The contens of the `LFC` dataframe contain the log2 fold-change, as well as the p-value and adjusted p-value:
-
- <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="800">
-
-### QC plots
-
-Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
-
-- [Biological replicate correlation](#biological-replicate-correlation)
-- [MD plot](#md-plot)
-- [p-value distribution](#p-value-distribution)
-- [Volcano plot](#volcano-plot)
 
 
 #### Biological replicate correlation
@@ -457,6 +460,12 @@ mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc
 The resulting plot will look like this:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/volcano-plot-QL-0.05.png" width="600">
+
+### Data exploration
+
+How many genes are differentially expressed? What are the top DEGs? How do I plot the expression for candidate genes?
+
+
 
 ## Functional analysis
 

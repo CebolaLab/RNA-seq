@@ -343,12 +343,16 @@ There are several models available to calculate differential gene expression. He
 ```R
 library(apeglm)
 
-#list the names of the coefficients and choose your comparison
+#List the names of the coefficients and choose your comparison
 resultsNames(dds)
 
-###substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
+#Substitute the '????' with a comparison, selected from the resultsNames(dds) shown above
 LFC <- lfcShrink(dds, coef="????", type="apeglm")
 ```
+
+The contens of the `LFC` dataframe look like:
+
+ <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="500">
 
 ### QC plots
 

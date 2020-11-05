@@ -333,7 +333,7 @@ print(p)
 #dev.off()
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="300">
 
 
 ### Differential gene expression

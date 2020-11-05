@@ -395,10 +395,10 @@ An MA plot is a scatter plot of the log fold-change between two samples against 
 
 ```R
 #Add a title to reflect your comparison 
-plotMD(LFC,main='???',cex=0.5)
+plotMA(LFC,main='???',cex=0.5)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/MAplot.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/MAplot.png" width="400">
 
 #### Distribution of p-values and FDRs
 

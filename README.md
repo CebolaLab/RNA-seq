@@ -295,7 +295,7 @@ normalizationFactors(dds) <- cqnNormFactors
 
 ### Sample clustering (PCA)
 
-A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)).
+A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)). Useful resources include this [blog post](https://builtin.com/data-science/step-step-explanation-principal-component-analysis) by Zakaria Jaadi and a [video](https://www.youtube.com/watch?v=_UVHneBUBW0) on PCA by StatQuest. 
 
 **If you have few samples:**
 

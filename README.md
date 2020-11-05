@@ -402,14 +402,14 @@ plotMA(LFC,main='???',cex=0.5)
 
 #### Distribution of p-values and FDRs
 
-The distribution of p-values following a differential expression analysis can be an indication of whether the experiment worked. 
+The distribution of p-values following a differential expression analysis can be an indication of whether there is an enrichment of differentially expressed genes and whether the statistical test is correct, i.e. has the correct assumptions. 
 
 ```R
 #The distribution of p-values
-hist(ql.groups12$table$PValue,col='grey',breaks=50,main='p108_T vs p108',xlab='p-values')
+hist(LFC$pvalue,breaks=50,col='grey',main='???',xlab='p-value')
 
 #The false-discovery rate distribution
-hist(topTags(ql.groups12,n=length(genes))$table$FDR,col='grey',breaks=50,main='p108_T vs p108',xlab='FDR')
+hist(LFC$padj,breaks=50,col='grey',main='???',xlab='Adjusted p-value')
 ```
 
 The p-value distribution:

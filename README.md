@@ -387,17 +387,18 @@ text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 abline(lm(RPKM.cqn[,1]~RPKM.cqn[,2]),col='red')
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="500">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
 
 #### MD plot
 
-A mean-difference (MD) plot plots the log fold-change between two samples against the average gene expression. An MD plot of log2 fold-change against average expression (CPM, counts per million) can be plotted using the following:
+An MA plot is a scatter plot of the log fold-change between two samples against the average gene expression (mean of normalised counts). An MA plot can be generated using the following command from DEseq2:
 
 ```R
-plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
+#Add a title to reflect your comparison 
+plotMD(LFC,main='???',cex=0.5)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/MAplot.png" width="800">
 
 #### Distribution of p-values and FDRs
 

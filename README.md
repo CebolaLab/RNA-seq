@@ -387,7 +387,7 @@ text(x,y,labels=paste0('r=',round(cor(RPKM.cqn[,1],RPKM.cqn[,2]),2)))
 abline(lm(RPKM.cqn[,1]~RPKM.cqn[,2]),col='red')
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/rep-correlation.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/rep-correlation.png" width="400">
 
 #### MD plot
 
@@ -397,7 +397,7 @@ A mean-difference (MD) plot plots the log fold-change between two samples agains
 plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="400">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
 
 #### Distribution of p-values and FDRs
 

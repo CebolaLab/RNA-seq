@@ -187,10 +187,13 @@ salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --
 The differential expression analysis contains the following steps:
 
 - [Import count data](#import-count-data)
-- [Filter genes](#filter-genes)
 - [Normalisation](#normalisation)
-- [Differential expression analysis](#differential-expression-analysis)
+- [Import data to DEseq2](#import-data-to-deseq2)
+- [Sample clustering (PCA)](#sample-clustering-(pca))
+- [Differential gene expression](#differential-gene-expression)
 - [QC plots](#qc-plots)
+
+Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways.  
 
 To install the required packages:
 
@@ -431,10 +434,10 @@ par(mar = c(5, 4, 4, 4))
 lfc = 2
 pval = 0.05
 
-tab = data.frame(logFC = ql.groups12$table[, 1], negLogPval = -log10(ql.groups12$table[, 4]))
+tab = data.frame(logFC = LFC$log2FoldChange, negLogPval = -log10(LFC$padj))
 
 plot(tab, pch = 16, cex = 0.4, xlab = expression(log[2]~fold~change),
-     ylab = expression(-log[10]~pvalue),main='p53_T vs p53')
+     ylab = expression(-log[10]~pvalue),main='???')
 
 #Genes with a fold-change greater than 2 and p-value<0.05:
 signGenes = (abs(tab$logFC) > lfc & tab$negLogPval > -log10(pval))
@@ -449,7 +452,6 @@ abline(v = c(-lfc, lfc), col = "blue", lty = 2)
 mtext(paste("FDR =", pval), side = 4, at = -log10(pval), cex = 0.6, line = 0.5, las = 1)
 mtext(c(paste("-", lfc, "fold"), paste("+", lfc, "fold")), side = 3, at = c(-lfc, lfc),
       cex = 0.6, line = 0.5)
-
 ```
 
 The resulting plot will look like this:

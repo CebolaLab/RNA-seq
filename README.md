@@ -215,14 +215,14 @@ The output from Salmon are TPM values (the 'abundance', transcripts per million)
 
 ```R
 #Read in the files with the sample information
-samples=read.table('samples.txt')
+samples = read.table('samples.txt')
 ```
 
 2) **Read in the transcript to gene ID file** provided in this repository (generated from gencode v35).
 
 ```R
 #Read in the gene/transcript IDs 
-tx2gene=read.table('tx2gene.txt',sep='\t')
+tx2gene = read.table('tx2gene.txt', sep='\t')
 ```
 
 3) **Read in the count data using `tximport`**. This will combine the transcript-level counts to gene-level. 
@@ -231,7 +231,7 @@ tx2gene=read.table('tx2gene.txt',sep='\t')
 library(tximport)
 
 #Column 2 of samples, samples[,2], contains the paths to the quant.sf files
-counts.imported=tximport(files=as.character(samples[,2]),type='salmon',tx2gene=tx2gene)
+counts.imported = tximport(files=as.character(samples[,2]), type = 'salmon', tx2gene = tx2gene)
 ```
 
 ### Normalisation 
@@ -242,7 +242,7 @@ The count data needs to be normalised for several confounding factors. The numbe
 
 ```R
 #Read in the gene lengths and gc-content data frame (provided in this repository)
-genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
+genes.length.gc = read.table('gencode-v35-gene-length-gc.txt',sep='\t')
 ```
 
 At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
@@ -252,17 +252,17 @@ To carry out the normalisation:
 ```R
 library(cqn)
 #cqn normalisation
-counts=counts.imported$counts
+counts = counts.imported$counts
 
 #Exclude genes with no length information, for compatibility with cqn.
-counts=counts[-which(is.na(genes.length.gc[rownames(counts),]$length)),]
+counts = counts[-which(is.na(genes.length.gc[rownames(counts),]$length)),]
 
 #Extract the lengths and GC contents for genes in the same order as the counts data-frame
-geneslengths=genes.length.gc[rownames(counts),]$length
-genesgc=genes.length.gc[rownames(counts),]$gc
+geneslengths = genes.length.gc[rownames(counts),]$length
+genesgc = genes.length.gc[rownames(counts),]$gc
 
 #Run the cqn normalisation 
-cqn.results<-cqn(counts, genesgc, geneslengths, lengthMethod = c("smooth"))
+cqn.results <- cqn(counts, genesgc, geneslengths, lengthMethod = c("smooth"))
 
 #Extract the offset, which will be input directly into DEseq2 to normalise the counts. 
 cqnoffset <- cqn.results.DEseq$glm.offset

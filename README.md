@@ -205,7 +205,7 @@ BiocManager::install("tximport")
 
 ### Import count data
 
-The output from Salmon are TPM counts (transcripts per million) mapped to transcripts. These will be converted into non-normalised counts and combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
+The output from Salmon are TPM values (the 'abundance', transcripts per million) and estimated counts mapped to transcripts. The counts will be combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
 
 1) **Create a matrix containing the sample IDs**. The matrix should have at least three columns: the first with the sample ID, the second with the path to the salmon `quant.sf` files, and the third with the group (e.g. treatment or sample). This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. 
 

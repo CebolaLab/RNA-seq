@@ -243,6 +243,8 @@ genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
 
 At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
 
+To carry out the normalisation:
+
 ```R
 library(cqn)
 #cqn normalisation

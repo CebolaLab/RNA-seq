@@ -397,7 +397,7 @@ A mean-difference (MD) plot plots the log fold-change between two samples agains
 plotMD(ql.groups12,main='Group1 vs Group2',cex=0.5)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="800">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FC-CPM.png" width="400">
 
 #### Distribution of p-values and FDRs
 

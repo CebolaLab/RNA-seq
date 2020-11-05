@@ -230,6 +230,8 @@ library(tximport)
 counts.imported=tximport(files=as.character(samples[,2]),type='salmon',tx2gene=tx2gene)
 ```
 
+### Normalisation 
+
 The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation (cqn) is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) to correct for sample-specific biases. Cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
 
 `cqn` requires an input of gene length, gc content and the estimated library size per sample (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `DESeq2`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu and the [tximport vignette](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson.
@@ -240,9 +242,6 @@ genes.length.gc=read.table('gencode-v35-gene-length-gc.txt',sep='\t')
 ```
 
 At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
-
-
-### Normalisation 
 
 ```R
 library(cqn)

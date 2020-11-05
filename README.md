@@ -207,21 +207,21 @@ BiocManager::install("tximport")
 
 The output from Salmon are TPM values (the 'abundance', transcripts per million) and estimated counts mapped to transcripts. The counts will be combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
 
-1) **Create a matrix containing the sample IDs**. The matrix should have at least three columns: the first with the sample ID, the second with the path to the salmon `quant.sf` files, and the third with the group (e.g. treatment or sample). This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. 
+1) **Create a matrix containing the sample IDs**. The matrix should have at least three columns: the first with the sample IDs, the second with the path to the salmon `quant.sf` files, and the third with the group (e.g. treatment or sample). This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. 
 
 ```R
 #Read in the files with the sample information
 samples=read.table('samples.txt')
 ```
 
-2) Read in the transcript to gene ID file provided in this repository (generated from gencode v35).
+2) **Read in the transcript to gene ID file** provided in this repository (generated from gencode v35).
 
 ```R
 #Read in the gene/transcript IDs 
 tx2gene=read.table('tx2gene.txt',sep='\t')
 ```
 
-3) Read in the count data using the tximport package. This will combine the transcript-level counts to gene-level. 
+3) **Read in the count data using `tximport`**. This will combine the transcript-level counts to gene-level. 
 
 ```R
 library(tximport)

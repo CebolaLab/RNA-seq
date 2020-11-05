@@ -357,7 +357,7 @@ LFC <- lfcShrink(dds, coef="????", type="apeglm")
 
 The contens of the `LFC` dataframe contain the log2 fold-change, as well as the p-value and adjusted p-value:
 
- <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="700">
+ <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/LFC.png" width="800">
 
 ### QC plots
 

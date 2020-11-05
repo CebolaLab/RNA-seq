@@ -270,25 +270,29 @@ cqnNormFactors <- exp(cqnoffset)
 
 #The 'counts' object imported from tximport also contains data-frames for 'length' and 'abundance'.
 #These data-frames should also be subset to remove any genes excluded from the 'NA' length filter
-counts.imported$abundance=counts.imported$abundance[rownames(counts),]
-counts.imported$counts=counts.imported$counts[rownames(counts),]
-counts.imported$length=counts.imported$length[rownames(counts),]
+counts.imported$abundance = counts.imported$abundance[rownames(counts),]
+counts.imported$counts = counts.imported$counts[rownames(counts),]
+counts.imported$length = counts.imported$length[rownames(counts),]
 ```
 
 The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2 using a negative bionomial model, to which the cqn offset will be added. 
 
 ```R
 #The normalised gene expression counts can be saved as:
-RPKM.cqn<-cqn.results$y + cqn.results$offset
+RPKM.cqn <- cqn.results$y + cqn.results$offset
 ```
 
 ### Import data to DEseq2 
 
-The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any batch effects. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. 
+An excellent tutorial on how DEseq2 works, including how different expression is calculated, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson. 
+
+The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any effects to be controlled for. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. Other covariants such as age could be added, for example. 
+
+The design, as shown below, should read `~ batch + condition`, where batch is an effect to be controlled for and condition is the condition to be tested, such as treated vs untreated or disease vs healthy. `batch` and `condition` (or your own variables with your preferred names), should be columns in `colData`.
 
 ```R
 #Import to DEseq2
-counts.DEseq=DESeqDataSetFromTximport(counts.imported,colData=colData,design=~condition+batch)
+counts.DEseq = DESeqDataSetFromTximport(counts.imported, colData=colData, design = ~batch + condition)
 
 dds <- DESeq(counts.DEseq)
 resultsNames(dds) #lists the coefficients
@@ -296,7 +300,6 @@ resultsNames(dds) #lists the coefficients
 #Add the normalisation offset from cqn
 normalizationFactors(dds) <- cqnNormFactors
 ```
-
 
 ### Differential gene expression
 
@@ -530,7 +533,7 @@ theme<-theme(panel.background = element_blank(),panel.border=element_rect(fill=N
 
 p<-ggplot(tmp,aes(x=condition,y=count)) + geom_boxplot() + 
   geom_dotplot(binaxis='y', stackdir='center', dotsize=0.6) + ggtitle('??? expression') + theme
-  
+
 print(p)
 ```
 

@@ -284,7 +284,7 @@ RPKM.cqn <- cqn.results$y + cqn.results$offset
 
 ### Import data to DEseq2 
 
-An excellent tutorial on how DEseq2 works, including how different expression is calculated including dispersion estimates, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson. 
+An excellent tutorial on how DEseq2 works, including how different expression is calculated including dispersion estimates, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson and in the [DEseq2 vignette](http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html).
 
 The counts information will be input into DEseq2. A data-frame called `colData` should be generated. The rownames will be the unique sample IDs, while the columns should contain the conditions being tested for differential expression, in addition to any effects to be controlled for. In the example below, the column called `condition` contains the treatment, while the column `batch` contains the donor ID. Other covariants such as age could be added, for example. 
 
@@ -303,7 +303,7 @@ normalizationFactors(dds) <- cqnNormFactors
 
 ### Differential gene expression
 
-There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation.
+There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation. This hbctraining [tutorial](https://hbctraining.github.io/DGE_workshop/lessons/05_DGE_DESeq2_analysis2.html) described the DEseq2 model fitting and hypothesis testing. 
 
 ```R
 library(apeglm)

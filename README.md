@@ -44,7 +44,7 @@ These fastQC reports can be combined into one summary report using [multiQC](htt
 If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. For **paired-end** data:
 
 ```bash
-fastp -i <sample>_R1.fastq.gz -O <sample>_R1.trimmed.fastq.gz -I <sample>_R2.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
+fastp -i <sample>_R1.fastq.gz -I <sample>_R2.fastq.gz -o <sample>_R1.trimmed.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
 ```
 
 For **single-end** reads: (note the adapter detection is not always as effective for single-end reads, so it is advisable to provide the adapter sequence, here the 'Illumina TruSeq Adapter Read 1'):
@@ -209,7 +209,7 @@ BiocManager::install("biomaRt")
 
 ### Import count data
 
-The output from Salmon are TPM values (the 'abundance', transcripts per million) and estimated counts mapped to transcripts. The counts will be combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](https://bioconductor.org/packages/devel/bioc/vignettes/tximport/inst/doc/tximport.html#Downstream_DGE_in_Bioconductor) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
+The output from Salmon are TPM values (the 'abundance', transcripts per million) and estimated counts mapped to transcripts. The counts will be combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
 
 1) **Create a matrix containing the sample IDs**. The matrix should have at least three columns: the first with the sample IDs, the second with the path to the salmon `quant.sf` files, and the third with the group (e.g. treatment or sample). This can be generated in excel, for example, and saved as a tab-delimited txt file called `samples.txt`. 
 

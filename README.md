@@ -82,7 +82,7 @@ STAR can then be run to align the `fastq` raw data to the genome. If the fastq f
 For **paired-end** data:
 
 ```bash
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.trimmed.fastq.gz <sample>_R2.trimmed.fastq.gz
+STAR --runThreadN 4 --genomeDir $GENOMEDIR --readFilesIn <sample>_R1.trimmed.fastq.gz <sample>_R2.trimmed.fastq.gz
 --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout 
 --alignSJoverhangMin 8 --outFilterMultimapNmax 20
 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999
@@ -94,7 +94,7 @@ STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>_R1.trimmed.fas
 For **single-end** data:
 
 ```bash
-STAR --runThreadN 4 --genomeDir $GENOMEREF --readFilesIn <sample>-trimmed.fastq.gz 
+STAR --runThreadN 4 --genomeDir $GENOMEDIR --readFilesIn <sample>-trimmed.fastq.gz 
 --outFileNamePrefix <sample> --readFilesCommand zcat --outSAMtype BAM Unsorted --quantTranscriptomeBan Singleend --outFilterType BySJout 
 --alignSJoverhangMin 8 --outFilterMultimapNmax 20
 --alignSJDBoverhangMin 1 --outFilterMismatchNmax 999

@@ -125,9 +125,9 @@ The transcript annotation file, `gencode.v35.annotation.gtf` can be downloaded f
 #Sort the output bam file. The suffix of the .bam input file may be .gzAligned.out.bam, or -merged.bam. Edit this code to include the appropriate file name.
 samtools sort <sample>.bam > <sample>-sorted.bam
 
-qualimap bamqc -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
+qualimap bamqc -bam <sample>-sorted.bam -gff gencode.v35.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
 
-qualimap rnaseq -bam <sample>-sorted.bam -gff gencode.v35.annotation.gtf -outdir <sample>-rnaseq-qualimap-reports --java-mem-size=16G
+qualimap rnaseq -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir <sample>-rnaseq-qualimap-report --java-mem-size=16G
 ```
 
 Qualimap can then run QC on combined samples. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 

@@ -169,7 +169,7 @@ Salmon is here used with the expectation minimisation (EM)/VBEM? approach method
 For **paired-end** data:
 
 ```bash
-salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
+salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
 ```
 
 For **single-end** data:
@@ -177,7 +177,7 @@ For **single-end** data:
 If using single end data, add the `--fldMean` and `--fldSD` parameters to include the mean and standard deviation of the fragment lengths. If listing multiple files to be combined, the library type will need to be specified, as Salmon cannot determine it automatically (see the Salmon documentation for more information).
 
 ```bash
-salmon quant --useEM -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType ?? -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant  --fldMean ?? --fldSD ??
+salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType ?? -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant  --fldMean ?? --fldSD ??
 ```
 
 ## Differential expression

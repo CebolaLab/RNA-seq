@@ -180,6 +180,7 @@ If using single end data, add the `--fldMean` and `--fldSD` parameters to includ
 salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType ?? -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant  --fldMean ?? --fldSD ??
 ```
 
+
 ## Differential expression
 
 ***All following code should be run in `R`.***
@@ -625,7 +626,6 @@ BiocManager::install("piano")
 library(piano)
 ```
 
-
 **Preseq**: Estimates library complexity
 
 **Picard RNAseqMetrics**: Number of reads that align to coding, intronic, UTR, intergenic, ribosomal regions, normalize gene coverage across a meta-gene body, identify 5’ or 3’ bias
@@ -661,12 +661,6 @@ The first line shows the total number of DNA fragments. The % of DNA fragments a
 ```
 samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
 ```
-
-
-
-
-$salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF0005790/p53-rep2-L002.gzAligned.toTranscriptome.out.bam -o "$sampleID".salmon_quant --fldMean $mean --fldSD 75 --seqBias --gcBias 
-
 
 ## Visualisation 
 

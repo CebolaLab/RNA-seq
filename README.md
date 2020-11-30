@@ -668,6 +668,9 @@ samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <s
 $salmon quant  -t $GENOMEDIR/gencode.v35.transcripts.fa --libType A -a IGF0005790/p53-rep2-L002.gzAligned.toTranscriptome.out.bam -o "$sampleID".salmon_quant --fldMean $mean --fldSD 75 --seqBias --gcBias 
 
 
+## Visualisation 
+
+The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. First, the bam file aligned to the reference genome may be assessed and corrected for GC bias, to acheive a more even coverage. 
 
 
 ### Compute GC bias
@@ -698,12 +701,12 @@ If opting to correct the GC-bias, `correctGCbias` can be used. This tool effecti
  correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
 ```
 
-**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNAs-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
+**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNA-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
 
 
-## Visualisation 
 
-The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. The gene counts are here normalised to TPM values during conversion. 
+
+The gene counts are here normalised to TPM values during conversion. 
 
 ```
 bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512

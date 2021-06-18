@@ -4,8 +4,6 @@ A step-by-step analysis pipeline for RNA-seq data from the [Cebola Lab](https://
 
 Correspondence: hannah.maude12@imperial.ac.uk
 
-## ** \*UNDER CONSTRUCTION\* **
-
 The resources and references used to build this tutorial are found at the bottom, in the [resources](#resources) section.
 
 ## Table of Contents
@@ -303,8 +301,8 @@ The differential expression analysis contains the following steps:
 
 - [Import count data](#import-count-data)
 - [Import data to DEseq2](#import-data-to-deseq2)
-- [QC plots](#qc-plots)
 - [Differential gene expression](#differential-gene-expression)
+- [QC plots](#qc-plots)
 
 Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways. In this analysis, GC-normalised counts from Salmon will be input into DESeq2, which will run the standard DESeq2 normalisation. Optionally, normalisation can be carried out using cqn to correct for sample-specific biases (described at the end of this page). If cqn is the method of choice, Salmon should be run *without* the `--gcBias` flag.
 
@@ -555,7 +553,7 @@ The resulting plot will look like this:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/volcano-plot-QL-0.05.png" width="600">
 
-### Data exploration
+## Data exploration
 
 How many genes are differentially expressed? What are the top DEGs? How do I plot the expression for candidate genes?
 

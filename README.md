@@ -216,12 +216,11 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 ## Visualisation 
 
-
 ### Compute GC bias
 
 GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
 
-It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. (In this pipeline, gene counts are corrected for GC content using `cqn` normalisation in the first step of the differential gene expression analysis).
+It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. 
 
 When generating `bedGraph` or `BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
 

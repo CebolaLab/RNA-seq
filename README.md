@@ -164,7 +164,7 @@ The STAR alignment will have output several files with the following file names:
 
 Two files will be used in downstream analysis, the `Aligned.out.bam` for generating genome browser bigWig tracks and the `Aligned.toTranscriptome.out.bam` for quantification and differential gene expression analysis. First, the `Aligned.out.bam` will be assessed for quality and processed to generate bigWig tracks. 
 
-**(1) Generate QC reports using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html).**
+**(1) Generate QC reports using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html) and samtools**
 
 Qualimap will be run on the `Aligned.out.bam` file (or `<sample>.merged.bam` if you have merged data).
 
@@ -198,6 +198,8 @@ cat <sample>.flagstat | grep mapped | head -n1 | cut -d ' ' -f1
 #The total number of properly paired reads
 cat ../bam_files/061818_con.flagstat | grep 'properly paired' | head -n1 | cut -d ' ' -f1
 ```
+
+> A combined qualimap report
 
 Qualimap `multi-bamqc` can then run QC on combined samples and replicates. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
 

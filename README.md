@@ -214,6 +214,9 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multiqc-alignment.png" width="800">
 
 
+## Visualisation 
+
+
 ### Compute GC bias
 
 GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
@@ -244,8 +247,7 @@ Correct the GC-bias using `correctGCBias`. This tool effectively removes reads f
 
 **NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNA-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
 
-
-## Visualisation 
+### Generate bigwig files
 
 The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. First, the bam file aligned to the reference genome may be assessed and corrected for GC bias, to acheive a more even coverage. 
 

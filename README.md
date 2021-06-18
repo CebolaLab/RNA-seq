@@ -14,6 +14,7 @@ The resources and references used to build this tutorial are found at the bottom
 - [Pre-alignment quality control (QC)](#pre-alignment-qc)
 - [Align to the reference human genome](#align-to-the-reference-genome)
 - [Post-alignment QC](#post-alignment-qc)
+- [Visualisation](#visualisation)
 - [Quantify transcripts](#quantification)
 - [Visualise tracks against the reference genome](#visualisation)
 
@@ -113,7 +114,6 @@ STAR --runThreadN 4 --runMode genomeGenerate --genomeDir $GENOMEDIR --genomeFast
 > Carry out the alignment
 
 STAR can then be run to align the `fastq` raw data to the genome. If the fastq files are in the compressed `.gz` format, the `--readFilesCommand zcat` argument is added. The output file should be unsorted, as required for the downstream quantification step using Salmon. The following options are shown according to the ENCODE recommendations. 
-
 
 For **paired-end** data:
 

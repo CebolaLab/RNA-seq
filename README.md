@@ -20,7 +20,7 @@ The resources and references used to build this tutorial are found at the bottom
 *Run in `R`*:
 - [Differential gene expression (DGE) analysis](#differential-expression)
 
-**Quality metrics**. Throughout this Github, ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) icons will show where QC measures are obtained. An excel spreadsheet can be downloaded from this Github which these metrics can be input into and saved. 
+**Quality metrics**: throughout this Github, ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) icons will show where QC measures are obtained. An excel spreadsheet can be downloaded from this Github which these metrics can be input into and saved. 
 
 ## Introduction
 
@@ -51,11 +51,14 @@ echo $totalreads
 
 ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC value:** input the total number of reads into the QC spreadsheet. 
 
-#### Adapter trimming 
+#### Trimming 
 
-If there is evidence of adapter contamination shown in the fastQC report (see below), adapter sequences may need to be trimmed, using a tools such as cutadapt, trimmomatic and fastp. In this pipeline, fastp is used to trim adapters. For **paired-end** data:
+Trimming is a useful step of pre-alignment QC, which removes low quality reads and contaminating adapter sequences (which occur when the length of DNA sequences is longer than the DNA insert).
+
+If there is evidence of adapter contamination shown in the fastQC report (see below), specific adapter sequences can be trimmed. Here, the program fastp is used to trim the data. For **paired-end** data:
 
 ```bash
+#Change the -l argument to change the minimum read length allowed.
 fastp -i <sample>_R1.fastq.gz -I <sample>_R2.fastq.gz -o <sample>_R1.trimmed.fastq.gz -O <sample>_R2.trimmed.fastq.gz --detect_adapter_for_pe -l 25 -j <sample>.fastp.json -h <sample>.fastp.html
 ```
 

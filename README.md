@@ -373,6 +373,8 @@ counts.DEseq = DESeqDataSetFromTximport(counts.imported, colData = colData, desi
 dds <- DESeq(counts.DEseq)
 resultsNames(dds) #lists the coefficients
 
+plotDispEsts(dds)
+
 #Add the normalisation offset from cqn
 #normalizationFactors(dds) <- cqnNormFactors
 ```
@@ -475,26 +477,6 @@ z + geom_text(size=2.5, aes(label = NA), position = nudge) + theme
 ```
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-remove-DONOR-no-label(small).png" width="600">
-
-> Biological replicate correlation
-
-The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` will be used. 
-
-```R
-#To test the correlation between the first two samples in columns 1 and 2
-plot(RPKM.cqn[,1], RPKM.cqn[,2], pch = 18, cex = 0.5, xlab = colnames(RPKM.cqn)[1], ylab = colnames(RPKM.cqn)[2])
-
-#The Pearson correlation coefficient can be calculated as:
-cor(RPKM.cqn[,1], RPKM.cqn[,2])
-
-#Add it to your plot, replacing x and y with the coordinates for your legend
-text(x, y, labels = paste0('r=', round(cor(RPKM.cqn[,1], RPKM.cqn[,2]),2)))
-
-#To add a regression line
-abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col = 'red')
-```
-
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
 
 > MA plot
 
@@ -802,3 +784,23 @@ The normalised gene expression values can be saved as a cqn output. These values
 #The normalised gene expression counts can be saved as:
 RPKM.cqn <- cqn.results$y + cqn.results$offset
 ``` 
+
+> Biological replicate correlation
+
+The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` will be used. 
+
+```R
+#To test the correlation between the first two samples in columns 1 and 2
+plot(RPKM.cqn[,1], RPKM.cqn[,2], pch = 18, cex = 0.5, xlab = colnames(RPKM.cqn)[1], ylab = colnames(RPKM.cqn)[2])
+
+#The Pearson correlation coefficient can be calculated as:
+cor(RPKM.cqn[,1], RPKM.cqn[,2])
+
+#Add it to your plot, replacing x and y with the coordinates for your legend
+text(x, y, labels = paste0('r=', round(cor(RPKM.cqn[,1], RPKM.cqn[,2]),2)))
+
+#To add a regression line
+abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col = 'red')
+```
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">

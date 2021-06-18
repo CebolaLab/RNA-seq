@@ -277,7 +277,7 @@ The correlation between `bam` files of biological and/or technical replicates ca
 
 The `bam` file previously aligned to the *transcriptome* by STAR will next be input into [Salmon](https://combine-lab.github.io/salmon/) in alignment-mode, in order to generate a matrix of gene counts. The Salmon documentation is available [here](https://salmon.readthedocs.io/en/latest/).
 
-#### Generate transcriptome
+> Generate transcriptome
 
 Salmon requires a transcriptome to be generated from the genome `fasta` and annotation `gtf` files used earlier with STAR. This can be generated using `gffread` (source package avaiable for download [here](http://ccb.jhu.edu/software/stringtie/gff.shtml)).
 
@@ -285,7 +285,7 @@ Salmon requires a transcriptome to be generated from the genome `fasta` and anno
 gffread -w GRCh38_no_alt_analysis_set_gencode.v36.transcripts.fa -g GCA_000001405.15_GRCh38_no_alt_analysis_set.fna gencode.v36.annotation.gtf
 ```
 
-### Run Salmon
+> Run Salmon
 
 Salmon is here used with the variational Bayesian expectation minimisation (VSEM) algorithm for quantification. Quanitifcation is described in the 2020 paper by [Deschamps-Francoeur et al.](https://www.sciencedirect.com/science/article/pii/S2001037020303032), which describes the handling of multi-mapped reads in RNA-seq data. Duplicated sequences such as pseudogenes can cause reads to align to multiple positions in the genome. Where transcripts have exons which are similar to other genomic sequences, the VSEM approach attributes reads to the most likely transcript. Technical replicates can also be combined by providing the Salmon `-a` argument with a list of bam files, with the file names separated by a space (this may not work on all queue systems. A common error is `segmentation fault (core dump)`). Here, Salmon is run ***without*** any normalisation, on each technical replicate; samples are combined and normalised in the next steps.
 

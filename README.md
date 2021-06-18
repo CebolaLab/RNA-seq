@@ -254,13 +254,11 @@ salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType 
 The differential expression analysis contains the following steps:
 
 - [Import count data](#import-count-data)
-- [Normalisation](#normalisation)
 - [Import data to DEseq2](#import-data-to-deseq2)
 - [QC plots](#qc-plots)
 - [Differential gene expression](#differential-gene-expression)
 
-
-Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways.  
+Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways. In this analysis, GC-normalised counts from Salmon will be input into DESeq2, which will run the standard DESeq2 normalisation. Optionally, normalisation can be carried out using cqn to correct for sample-specific biases (described at the end of this page). If cqn is the method of choice, Salmon should be run *without* the `--gcBias` flag.
 
 To install the required packages:
 

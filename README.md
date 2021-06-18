@@ -117,20 +117,36 @@ samtools merge <sample>-merged.bam <sample>_L001.bam <sample>_L002.bam <sample>_
 
 ## Post-alignment QC
 
-First, QC reports will be generated using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html). Run on either the `<sample>.gzAligned.out.bam` or `<sample>.merged.bam`.
+The STAR alignment will have output several files with the following file names:
 
-The transcript annotation file, `gencode.v35.annotation.gtf` can be downloaded from [gencode](https://www.gencodegenes.org/human/).
+- Aligned.out.bam
+- Aligned.toTranscriptome.out.bam
+- Log.final.out
+- Log.out  
+- Log.progress.out
+- SJ.out.tab
+
+Two files will be used in downstream analysis, the `Aligned.out.bam` for generating genome browser bigWig tracks and the `Aligned.toTranscriptome.out.bam` for quantification and differential gene expression analysis. First, the `Aligned.out.bam` will be assessed for quality and processed to generate bigWig tracks. 
+
+**(1) Generate QC reports using [qualimap](http://qualimap.bioinfo.cipf.es/doc_html/analysis.html).**
+
+Qualimap will be run on the `Aligned.out.bam` file (or `<sample>.merged.bam` if you have merged data).
+
+Qualimap will provide several measures of quality, including how many reads have aligned to exons vs non-coding intergenic regions. To do this, qualimap requires a transcript file which contains the information containing the locations of coding regions. The transcript annotation file, `gencode.v35.annotation.gtf` can be downloaded from [gencode](https://www.gencodegenes.org/human/). (*Note: the most recent annotation file should be used.*)
 
 ```bash
 #Sort the output bam file. The suffix of the .bam input file may be .gzAligned.out.bam, or -merged.bam. Edit this code to include the appropriate file name.
 samtools sort <sample>.bam > <sample>-sorted.bam
 
+samtools index <sample>-sorted.bam
+
+#Run qualimap to generate QC reports
 qualimap bamqc -bam <sample>-sorted.bam -gff gencode.v35.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
 
 qualimap rnaseq -bam <sample>-sorted.bam -gtf gencode.v35.annotation.gtf -outdir <sample>-rnaseq-qualimap-report --java-mem-size=16G
 ```
 
-Qualimap can then run QC on combined samples. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
+Qualimap `multi-bamqc` can then run QC on combined samples and replicates. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
 
 *Note, some versions of qualimap require the raw_data_qualimapReport directory to be renamed to raw_data.*
 
@@ -141,6 +157,57 @@ qualimap multi-bamqc sample.txt
 The QC reports can be combined using [multiqc](https://multiqc.info/); an excellent tool for combining QC reports of multiple samples into one. Example outputs of qualimap/multiqc include the alignment positions 
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multiqc-alignment.png" width="800">
+
+
+### Compute GC bias
+
+GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
+
+It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. (In this pipeline, gene counts are corrected for GC content using `cqn` normalisation in the first step of the differential gene expression analysis).
+
+When generating `bedGraph` or `BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
+
+The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
+The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
+Set the `-l` argument to your fragment length.
+
+The input `bam` file requires an index, which can be generated using `samtools index`.
+
+```bash
+deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
+```
+
+The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.png" width="500">
+
+Correct the GC-bias using `correctGCBias`. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and adds reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
+
+```bash
+ correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
+```
+
+**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNA-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
+
+
+## Visualisation 
+
+The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. First, the bam file aligned to the reference genome may be assessed and corrected for GC bias, to acheive a more even coverage. 
+
+The gene counts are here normalised to TPM values during conversion. 
+
+```
+bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
+```
+
+Biological replicates can also be merged and a bigWig file generated for the combined sample.
+
+```
+bamCompare -b <sample>_1.bam
+```
+
+There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
+
 
 ### Remove duplicates?
 
@@ -169,7 +236,7 @@ Salmon is here used with the expectation minimisation (EM)/VBEM? approach method
 For **paired-end** data:
 
 ```bash
-salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant 
+salmon quant -t GRCh38_no_alt_analysis_set_gencode.v36.transcripts.fa --libType A -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant --gcBias --seqBias
 ```
 
 For **single-end** data:
@@ -179,7 +246,6 @@ If using single end data, add the `--fldMean` and `--fldSD` parameters to includ
 ```bash
 salmon quant -t GRCh38_no_alt_analysis_set_gencode.v35.transcripts.fa --libType ?? -a <sample>.Aligned.toTranscriptome.out.bam -o <sample>.salmon_quant  --fldMean ?? --fldSD ??
 ```
-
 
 ## Differential expression
 
@@ -202,7 +268,7 @@ To install the required packages:
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 
-BiocManager::install("cqn")
+#BiocManager::install("cqn") #optional for cqn normalisation
 BiocManager::install("DESeq2")
 BiocManager::install("tximport")
 BiocManager::install("biomaRt")
@@ -219,11 +285,11 @@ The output from Salmon are TPM values (the 'abundance', transcripts per million)
 samples = read.table('samples.txt')
 ```
 
-2) **Read in the transcript to gene ID file** provided in this repository (generated from gencode v35).
+2) **Read in the transcript to gene ID file** provided in this repository (generated from gencode v36).
 
 ```R
 #Read in the gene/transcript IDs 
-tx2gene = read.table('tx2gene.txt', sep = '\t')
+tx2gene = read.table('tx2gene_gencodev36-unique.txt', sep = '\t')
 ```
 
 3) **Read in the count data using `tximport`**. This will combine the transcript-level counts to gene-level. 
@@ -235,53 +301,8 @@ library(tximport)
 counts.imported = tximport(files = as.character(samples[,2]), type = 'salmon', tx2gene = tx2gene)
 ```
 
-### Normalisation 
+To use cqn normalisation, see the optional description at the [end](#cqn_normalisation).
 
-The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation (cqn) is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) to correct for sample-specific biases. Cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
-
-`cqn` requires an input of gene length, gc content and the estimated library size per sample (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `DESeq2`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu and the [tximport vignette](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson.
-
-```R
-#Read in the gene lengths and gc-content data frame (provided in this repository)
-genes.length.gc = read.table('gencode-v35-gene-length-gc.txt', sep = '\t')
-```
-
-At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
-
-To carry out the normalisation:
-
-```R
-library(cqn)
-#cqn normalisation
-counts = counts.imported$counts
-
-#Exclude genes with no length information, for compatibility with cqn.
-counts = counts[-which(is.na(genes.length.gc[rownames(counts),]$length)),]
-
-#Extract the lengths and GC contents for genes in the same order as the counts data-frame
-geneslengths = genes.length.gc[rownames(counts),]$length
-genesgc = genes.length.gc[rownames(counts),]$gc
-
-#Run the cqn normalisation 
-cqn.results <- cqn(counts, genesgc, geneslengths, lengthMethod = c("smooth"))
-
-#Extract the offset, which will be input directly into DEseq2 to normalise the counts. 
-cqnoffset <- cqn.results.DEseq$glm.offset
-cqnNormFactors <- exp(cqnoffset)
-
-#The 'counts' object imported from tximport also contains data-frames for 'length' and 'abundance'.
-#These data-frames should also be subset to remove any genes excluded from the 'NA' length filter
-counts.imported$abundance = counts.imported$abundance[rownames(counts),]
-counts.imported$counts = counts.imported$counts[rownames(counts),]
-counts.imported$length = counts.imported$length[rownames(counts),]
-```
-
-The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2 using a negative bionomial model, to which the cqn offset will be added. 
-
-```R
-#The normalised gene expression counts can be saved as:
-RPKM.cqn <- cqn.results$y + cqn.results$offset
-```
 
 ### Import data to DEseq2 
 
@@ -619,101 +640,14 @@ p + scale_fill_manual(values = rep("steelblue2", dim(revigoUP.108top)[1])) + the
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/REVIGO-UP.png" width="800">
 
-### GSEA 
+### Gene Set Enrichment Analysis
+
+Gene set enrichment analysis (GSEA) will be used to test for the altered expression of pre-defined *set* of genes.  
 
 ```R
 BiocManager::install("piano")
 library(piano)
 ```
-
-**Preseq**: Estimates library complexity
-
-**Picard RNAseqMetrics**: Number of reads that align to coding, intronic, UTR, intergenic, ribosomal regions, normalize gene coverage across a meta-gene body, identify 5’ or 3’ bias
-
-**RSeQC**: Suite of tools to assess various post-alignment quality, Calculate distribution of Insert Size, Junction Annotation (% Known, % Novel read spanning splice junctions), BAM to BigWig (Visual Inspection with IGV)
-
-
-The post-alignment QC steps involve several steps:
-
-- [Remove mitochondrial reads](#remove-mitochondrial-reads)
-- [Remove duplicates & low-quality alignments](#tag-and-remove-duplicates-and-low-quality-alignments) (including non-uniquely mapped reads)
-- Check the expected mapping to exons, introns etc.
-
-#### Remove mitochondrial reads
-
-Remove mitochondrial reads. To assess the total % of mitochondrial reads, in an unsorted bam file, run:
-
-```
-samtools view <sample>.bam | grep chrM | wc -l 
-```
-
-To see the total number of DNA fragments, run:
-
-```
-samtools flagstat <sample>.bam > <sample>.flagstat
-
-cat <sample>_sorted.flagstat
-```
-
-The first line shows the total number of DNA fragments. The % of DNA fragments aligned to chrM can be calculated as a % of the total DNA fragments. To remove any mitocondrial DNA, run the following:
-
-
-```
-samtools view -h <sample>-sorted.bam | grep -v chrM | samtools sort -O bam -o <sample>.rmChrM.bam -T .
-```
-
-## Visualisation 
-
-The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. First, the bam file aligned to the reference genome may be assessed and corrected for GC bias, to acheive a more even coverage. 
-
-
-### Compute GC bias
-
-GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
-
-It is **crucial** to correct GC-bias when comparing groups of samples which may have variable GC content dependence, for example when samples were processed in different libraries. `Salmon`, used later to generate read counts for quantification, has its own in-built method to correct for GC-bias. When generating `bedGraph/BigWig` files for visualisation, the user may opt to correct GC-bias so that coverage is corrected and appears more uniform. The `deeptools` suite includes tools to calculate GC bias and correct for it.
-
-The reference genome file should be converted to `.2bit` format using [`faToTwoBit`](http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/faToTwoBit).
-The effective genome size can be calculated using `faCount` available [here](http://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/).
-Set the `-l` argument to your fragment length.
-
-The input `bam` file requires an index, which can be generated using `samtools index`.
-
-```bash
-deeptools computeGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit -l 100 --GCbiasFrequenciesFile <sample>.freq.txt  --biasPlot <sample>.biasPlot.pdf
-```
-
-The bias plot format can be changed to png, eps, plotly or svg. If there is significant evidence of a GC bias, this can be corrected using `correctGCbias`. An example of GC bias can be seen in the plot outout from `computeGCBias` below:
-
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/GCbiasPlot.png" width="500">
-
-The GC-bias will later be corrected when normalising the data for DGE analysis. However, for visualisation purposes, the user may wish to correct the GC-bias for the corresponding bigWig file.
-
-If opting to correct the GC-bias, `correctGCbias` can be used. This tool effectively removes reads from regions with greater-than-expected coverage (GC-rich regions) and removes reads from regions with less-than-expected coverage (AT-rich regions). The methods are described by [Benjamini and Speed [2012]](https://academic.oup.com/nar/article/40/10/e72/2411059). The following code can be used:
-
-```bash
- correctGCBias -b <sample>-sorted.bam --effectiveGenomeSize 3099922541 -g GCA_000001405.15_GRCh38_no_alt_analysis_set.2bit --GCbiasFrequenciesFile <sample>.freq.txt -o <sample>.gc_corrected.bam [options]
-```
-
-**NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNA-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
-
-
-
-
-The gene counts are here normalised to TPM values during conversion. 
-
-```
-bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
-```
-
-Biological replicates can also be merged and a bigWig file generated for the combined sample.
-
-```
-bamCompare -b <sample>_1.bam
-```
-
-There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
-
 
 ## Resources
 
@@ -735,3 +669,60 @@ Other RNA-seq tutorials:
 
 Understanding normalisation:
 - https://hbctraining.github.io/DGE_workshop/lessons/02_DGE_count_normalization.html
+
+
+
+
+**Preseq**: Estimates library complexity
+
+**Picard RNAseqMetrics**: Number of reads that align to coding, intronic, UTR, intergenic, ribosomal regions, normalize gene coverage across a meta-gene body, identify 5’ or 3’ bias
+
+**RSeQC**: Suite of tools to assess various post-alignment quality, Calculate distribution of Insert Size, Junction Annotation (% Known, % Novel read spanning splice junctions), BAM to BigWig (Visual Inspection with IGV)
+
+## cqn Normalisation 
+
+The count data needs to be normalised for several confounding factors. The number of DNA reads (or fragments for paired end data) mapped to a gene is influeced by (1) its gc-content, (2) its length and (3) the total library size for the sample. There are multiple methods used for normalisation. Here, conditional quantile normalisation (cqn) is used as recommended by [Mandelboum et al. (2019)](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000481) to correct for sample-specific biases. Cqn is described by [Hansen et al. (2012)](https://academic.oup.com/biostatistics/article/13/2/204/1746212).
+
+`cqn` requires an input of gene length, gc content and the estimated library size per sample (which it will estimate as the total sum of the counts if not provided by the user). For more guidance on how to normalise using `cqn` and import into `DESeq2`, the user is directed to [the cqn vignette](https://bioconductor.org/packages/release/bioc/vignettes/cqn/inst/doc/cqn.pdf) by Hansen & Wu and the [tximport vignette](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson.
+
+```R
+#Read in the gene lengths and gc-content data frame (provided in this repository)
+genes.length.gc = read.table('gencode-v35-gene-length-gc.txt', sep = '\t')
+```
+
+At this stage, technical replicates can be combined if they have not been already. This is typically achieved by summing the counts. 
+
+To carry out the normalisation:
+
+```R
+library(cqn)
+#cqn normalisation
+counts = counts.imported$counts
+
+#Exclude genes with no length information, for compatibility with cqn.
+counts = counts[-which(is.na(genes.length.gc[rownames(counts),]$length)),]
+
+#Extract the lengths and GC contents for genes in the same order as the counts data-frame
+geneslengths = genes.length.gc[rownames(counts),]$length
+genesgc = genes.length.gc[rownames(counts),]$gc
+
+#Run the cqn normalisation 
+cqn.results <- cqn(counts, genesgc, geneslengths, lengthMethod = c("smooth"))
+
+#Extract the offset, which will be input directly into DEseq2 to normalise the counts. 
+cqnoffset <- cqn.results.DEseq$glm.offset
+cqnNormFactors <- exp(cqnoffset)
+
+#The 'counts' object imported from tximport also contains data-frames for 'length' and 'abundance'.
+#These data-frames should also be subset to remove any genes excluded from the 'NA' length filter
+counts.imported$abundance = counts.imported$abundance[rownames(counts),]
+counts.imported$counts = counts.imported$counts[rownames(counts),]
+counts.imported$length = counts.imported$length[rownames(counts),]
+```
+
+The normalised gene expression values can be saved as a cqn output. These values will not be used for the downstream differential expression, rather they are useful for any visualisation purposes. Differential expression will be calculated within DEseq2 using a negative bionomial model, to which the cqn offset will be added. 
+
+```R
+#The normalised gene expression counts can be saved as:
+RPKM.cqn <- cqn.results$y + cqn.results$offset
+``` 

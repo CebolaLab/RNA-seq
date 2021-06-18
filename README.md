@@ -402,7 +402,9 @@ p <- p + geom_point() + theme #+ xlab(percentage[1]) + ylab(percentage[2])
 print(p)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small)" width="300">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small).pdf" width="300">
+
+https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small).pdf
 
 To generate the PCA plot with any batch effects removed:
 

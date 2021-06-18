@@ -575,7 +575,8 @@ How many genes are differentially expressed? What are the top DEGs? How do I plo
 attach(as.data.frame(LFC))
 
 #The total number of DEGs with an adjusted p-value<0.05
-sum(!is.na(padj) & padj < 0.05)
+summary(LFC, alpha=0.05)
+
 #The total number of DEGs with an adjusted p-value<0.05 AND absolute fold-change > 2
 sum(!is.na(padj) & padj < 0.05 & abs(log2FoldChange) >2)
 

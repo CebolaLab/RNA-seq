@@ -256,12 +256,6 @@ The gene counts are here normalised to TPM values during conversion.
 bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
 ```
 
-Biological replicates can also be merged and a bigWig file generated for the combined sample.
-
-```bash
-bamCompare -b <sample>_1.bam
-```
-
 There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
 
 

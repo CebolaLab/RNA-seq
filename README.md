@@ -72,7 +72,7 @@ A html report is generated, including the following information:
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/fastp-summary.png" width="700">
 
-Here, fastQC should be repeated to generated reports for the trimmed data:
+Here, fastQC should be repeated to generated reports for the trimmed data and a second multiqc report generated:
 
 ```bash
 fastqc <sample>_R1.trimmed.fastq.gz -d . -o .
@@ -80,7 +80,7 @@ fastqc <sample>_R1.trimmed.fastq.gz -d . -o .
 fastqc <sample>_R2.trimmed.fastq.gz -d . -o .
 ```
 
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC value:** extract the number of reads in the trimmed files, as shown above, and use the results to fill in the QC spreadsheet.
+![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC value:** the number of trimmed reads can be filled in using the fastp report, or by extracting the number of reads from the trimmed fastQC files, as above, and used to fill in the QC spreadsheet.
 
 ## Align to the reference genome
 

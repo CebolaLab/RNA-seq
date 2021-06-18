@@ -309,10 +309,10 @@ salmon quant -t GRCh38_no_alt_analysis_set_gencode.v36.transcripts.fa --libType 
 
 The differential expression analysis contains the following steps:
 
-- [Import count data](#import-count-data)
-- [Import data to DEseq2](#import-data-to-deseq2)
-- [Differential gene expression](#differential-gene-expression)
-- [QC plots](#qc-plots)
+- Import count data
+- Import data to DEseq2
+- Differential gene expression
+- QC plots
 
 Following these steps, [functional analysis](#functional-analysis) will be carried out to investigate differential expression of biological pathways. In this analysis, GC-normalised counts from Salmon will be input into DESeq2, which will run the standard DESeq2 normalisation. Optionally, normalisation can be carried out using cqn to correct for sample-specific biases (described at the end of this page). If cqn is the method of choice, Salmon should be run *without* the `--gcBias` flag.
 
@@ -328,7 +328,7 @@ BiocManager::install("tximport")
 BiocManager::install("biomaRt")
 ```
 
-### Import count data
+> Import count data
 
 The output from Salmon are TPM values (the 'abundance', transcripts per million) and estimated counts mapped to transcripts. The counts will be combined to gene-level estimates in R. The output files from salmon, `quant.sf` will be imported into R using `tximport` (described in detail [here](http://bioconductor.org/packages/release/bioc/vignettes/tximport/inst/doc/tximport.html) by Love, Soneson & Robinson). This will require a list of sample IDs as well as a file containing transcript to gene ID mappings, in order to convert the transcriptome alignment to gene-level counts. 
 
@@ -358,7 +358,7 @@ counts.imported = tximport(files = as.character(samples[,2]), type = 'salmon', t
 To use cqn normalisation, see the optional description at the [end](#cqn_normalisation). Otherwise, the default DESeq2 normalisation will be used.
 
 
-### Import data to DEseq2 
+> Import data to DEseq2 
 
 An excellent tutorial on how DEseq2 works, including how different expression is calculated including dispersion estimates, is provided in [this](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/04_DGE_DESeq2_analysis.md) hbctraining lesson and in the [DEseq2 vignette](http://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html).
 
@@ -377,7 +377,7 @@ resultsNames(dds) #lists the coefficients
 #normalizationFactors(dds) <- cqnNormFactors
 ```
 
-### Differential gene expression
+> Differential gene expression
 
 There are several models available to calculate differential gene expression. Here, the apeglm shrinkage method will be applied to shrink high log-fold changes with little statistical evidence and account for lowly expressed genes with significant deviation. This hbctraining [tutorial](https://hbctraining.github.io/DGE_workshop/lessons/05_DGE_DESeq2_analysis2.html) described the DEseq2 model fitting and hypothesis testing. 
 
@@ -397,7 +397,7 @@ The contens of the `LFC` dataframe contain the log2 fold-change, as well as the 
 
  Following quality control analysis, we will [explore the data](#data-exploration) to check the numbers of differentially expressed genes (DEGs), the top DGEs and pathways of differential expression.
 
-### QC plots
+> QC plots
 
 Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
 
@@ -407,7 +407,7 @@ Before moving on to functional analysis, such as gene set enrichment analysis, q
 - [p-value distribution](#p-value-distribution)
 - [Volcano plot](#volcano-plot)
 
-#### Principal component analysis
+> Principal component analysis
 
 A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)). Useful resources include this [blog post](https://builtin.com/data-science/step-step-explanation-principal-component-analysis) by Zakaria Jaadi and a [video](https://www.youtube.com/watch?v=_UVHneBUBW0) on PCA by StatQuest. 
 
@@ -476,7 +476,7 @@ z + geom_text(size=2.5, aes(label = NA), position = nudge) + theme
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-remove-DONOR-no-label(small).png" width="600">
 
-#### Biological replicate correlation
+> Biological replicate correlation
 
 The correlation between the expression of genes in two biological replicates should ideally be very high. The normalised expression values, saved above as `RPKM.cqn` will be used. 
 
@@ -496,7 +496,7 @@ abline(lm(RPKM.cqn[,1] ~ RPKM.cqn[,2]), col = 'red')
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/biological-rep-correlation.png" width="400">
 
-#### MA plot
+> MA plot
 
 An MA plot is a scatter plot of the log fold-change between two samples against the average gene expression (mean of normalised counts). An MA plot can be generated using the following command from DEseq2:
 
@@ -507,7 +507,7 @@ plotMA(LFC, main = '???', cex = 0.5)
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/MAplot.png" width="400">
 
-#### Distribution of p-values and FDRs
+> Distribution of p-values and FDRs
 
 The distribution of p-values following a differential expression analysis can be an indication of whether there is an enrichment of differentially expressed genes and whether the statistical test is correct, i.e. has the correct assumptions. 
 
@@ -525,7 +525,7 @@ The p-value distribution:
 The false discovery rate (FDR) distribution:
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/FDR-hist.png" width="800">
 
-#### Volcano plots
+> Volcano plots
 
 A volcano plot is a scatterplot which plots the p-value of differential expression against the fold-change. The volcano plot can be designed to highlight datapoints of significant genes, with a p-value and fold-change cut off.
 

@@ -301,7 +301,7 @@ library(tximport)
 counts.imported = tximport(files = as.character(samples[,2]), type = 'salmon', tx2gene = tx2gene)
 ```
 
-To use cqn normalisation, see the optional description at the [end](#cqn_normalisation).
+To use cqn normalisation, see the optional description at the [end](#cqn_normalisation). Otherwise, the default DESeq2 normalisation will be used.
 
 
 ### Import data to DEseq2 
@@ -320,7 +320,7 @@ dds <- DESeq(counts.DEseq)
 resultsNames(dds) #lists the coefficients
 
 #Add the normalisation offset from cqn
-normalizationFactors(dds) <- cqnNormFactors
+#normalizationFactors(dds) <- cqnNormFactors
 ```
 
 ### Differential gene expression
@@ -347,13 +347,13 @@ The contens of the `LFC` dataframe contain the log2 fold-change, as well as the 
 
 Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
 
-- [Principal component analysis - sample clustering](#principal-component-analysis-sample-clustering)
+- [Principal component analysis - sample clustering](#principal-component-analysis)
 - [Biological replicate correlation](#biological-replicate-correlation)
 - [MD plot](#md-plot)
 - [p-value distribution](#p-value-distribution)
 - [Volcano plot](#volcano-plot)
 
-#### Principal component analysis - sample clustering
+#### Principal component analysis
 
 A common component of analysing RNA-seq data is to carry out QC by testing if expected samples cluster together. One popular tool is principal component analysis (PCA) (the following steps are adapted from a [hbctraining tutorial on clustering](https://github.com/hbctraining/DGE_workshop_salmon/blob/master/lessons/03_DGE_QC_analysis.md)). Useful resources include this [blog post](https://builtin.com/data-science/step-step-explanation-principal-component-analysis) by Zakaria Jaadi and a [video](https://www.youtube.com/watch?v=_UVHneBUBW0) on PCA by StatQuest. 
 
@@ -373,10 +373,14 @@ vst_mat <- assay(vst)
 pca <- prcomp(t(vst_mat))
 ```
 
-The results can be plotted using ggplot2.
+The results can be plotted using ggplot2. Several examples are provided below:
 
 ```R
 library(ggplot2)
+
+z = plotPCA(vst.r, "condition")
+nudge <- position_nudge(y = 2,x=6)
+z + geom_text(aes(label = name), position = nudge) +theme 
 
 #plotPCA from DEseq2 plots uses the top 500 genes:
 data = plotPCA(rld, intgroup = c("condition", "batch"), returnData = TRUE)
@@ -398,8 +402,25 @@ p <- p + geom_point() + theme #+ xlab(percentage[1]) + ylab(percentage[2])
 print(p)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA.png" width="300">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small)" width="300">
 
+To generate the PCA plot with any batch effects removed:
+
+```R
+#Batch effect (donor) removed
+assay(vst.r) <- limma::removeBatchEffect(assay(vst.r), vst.r$batch)
+
+z=plotPCA(vst.r, "condition")
+nudge <- position_nudge(y = 1,x=4)
+z + geom_text(size=2.5, aes(label = name), position = nudge) + theme 
+
+#An example with no labels
+z=plotPCA(vst.r, "condition")
+nudge <- position_nudge(y = 1,x=4)
+z + geom_text(size=2.5, aes(label = NA), position = nudge) + theme 
+```
+
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-remove-DONOR-no-label(small).pdf" width="300">
 
 #### Biological replicate correlation
 

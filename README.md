@@ -213,7 +213,7 @@ The QC reports can be combined using [multiqc](https://multiqc.info/); an excell
 
 <img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/multiqc-alignment.png" width="800">
 
-## Remove duplicates?
+#### Remove duplicates?
 
 It is generally recommended to *not* remove duplicates when working with RNA-seq data, unless using UMIs (unique molecular identifiers) [(Klepikova et al. 2017)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5357343/). This is because there are likely to be DNA molecules which are natural duplicates of each other, for example originating from genes with a shared sequence in a common domain. Typically, removing duplicates does more harm than good. It is more or less impossible to remove duplicates from single-end data and research has also suggested it may cause false negatives when applied to paired end data. See more in [this useful blog post](https://dnatech.genomecenter.ucdavis.edu/faqs/should-i-remove-pcr-duplicates-from-my-rna-seq-data/). Generally, duplicates are not a problem so long as the *library complexity is high*. 
 

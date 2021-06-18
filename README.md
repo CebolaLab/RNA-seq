@@ -31,6 +31,15 @@ conda install -n RNA-seq -c bioconda fastp
 conda install -n RNA-seq -c bioconda multiqc
 conda install -n RNA-seq -c bioconda star
 conda install -n RNA-seq -c bioconda samtools
+conda install -n RNA-seq -c bioconda deeptools
+conda install -n RNA-seq -c bioconda salmon
+
+#For differential expression using DESeq2
+conda create -N DEseq2 r-essentials r-base
+
+conda install -N DEseq2 -c bioconda bioconductor-deseq2
+conda install -N DEseq2 -c bioconda bioconductor-tximport 
+conda install -N DEseq2 -c r r-ggplot2 
 ```
 
 ## Introduction

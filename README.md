@@ -402,7 +402,7 @@ p <- p + geom_point() + theme #+ xlab(percentage[1]) + ylab(percentage[2])
 print(p)
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small).png" width="300">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-no-correction-no-label(small).png" width="600">
 
 To generate the PCA plot with any batch effects removed:
 
@@ -420,7 +420,7 @@ nudge <- position_nudge(y = 1,x=4)
 z + geom_text(size=2.5, aes(label = NA), position = nudge) + theme 
 ```
 
-<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-remove-DONOR-no-label(small).png" width="300">
+<img src="https://github.com/CebolaLab/RNA-seq/blob/master/Figures/PCA-vsd-remove-DONOR-no-label(small).png" width="600">
 
 #### Biological replicate correlation
 

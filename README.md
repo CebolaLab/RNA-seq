@@ -401,11 +401,11 @@ The contens of the `LFC` dataframe contain the log2 fold-change, as well as the 
 
 Before moving on to functional analysis, such as gene set enrichment analysis, quality control should be carried out on the differential expression analyses. The types of plots which will be generated below are:
 
-- [Principal component analysis - sample clustering](#principal-component-analysis)
-- [Biological replicate correlation](#biological-replicate-correlation)
-- [MD plot](#md-plot)
-- [p-value distribution](#p-value-distribution)
-- [Volcano plot](#volcano-plot)
+- Principal component analysis - sample clustering
+- Biological replicate correlation
+- MD plot
+- p-value distribution
+- Volcano plot
 
 > Principal component analysis
 

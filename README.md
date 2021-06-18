@@ -151,7 +151,7 @@ STAR --runThreadN 4 --genomeDir $GENOMEDIR --readFilesIn <sample>-trimmed.fastq.
 
 For compatibility with the STAR quantification, the `--quantMode TranscriptomeSAM` option will result in the output of two alignment files, one to the reference genome (`Aligned.*.sam/bam`) and one to the transcriptome (`Aligned.toTranscriptome.out.bam`).
 
-#### Merge files [optional]
+> Merge files [optional]
 
 At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. For example, if your sample was split across lanes 1, 2 and 3 (`L001`, `L002`, `L003`):
 
@@ -227,7 +227,7 @@ It is generally recommended to *not* remove duplicates when working with RNA-seq
 
 ## Visualisation 
 
-### Compute GC bias
+> Compute GC bias
 
 GC-bias describes the bias in sequencing depth depending on the GC-content of the DNA sequence. Bias in DNA fragments, due to the GC-content and start-and-end sequences, may be increased due to preferential PCR amplification [(Benjamini and Speed, 2012)](https://academic.oup.com/nar/article/40/10/e72/2411059). A high rate of PCR duplications, for example when library complexity is low, may cause a significant GC-bias due to the preferential amplification of specific DNA fragments. This can significantly impact transcript abundance estimates. Bias in RNA-seq is explained in a handy [blog](https://mikelove.wordpress.com/2016/09/26/rna-seq-fragment-sequence-bias/) and [video](https://youtu.be/9xskajkNJwg) by Mike Love.
 
@@ -257,7 +257,7 @@ Correct the GC-bias using `correctGCBias`. This tool effectively removes reads f
 
 **NOTE:** When calculating the GC-bias for ChIP-seq, ATAC-seq, DNase-seq (and CUT&Tag/CUT&Run) it is recommended to filter out problematic regions. These include those with low mappability and high numbers of repeats. The compiled list of [ENCODE blacklist regions](https://www.nature.com/articles/s41598-019-45839-z) should be excluded. However, the ENCODE blacklist regions have little overlap with coding regions and this step is not necessary for RNA-seq data [(Amemiya et al, 2019)](https://www.nature.com/articles/s41598-019-45839-z).
 
-### Generate bigwig files
+> Generate bigwig files
 
 The `bam` file aligned to the *genome* should be converted to a `bigWig` format, which can be uploaded to genome browsers and viewed as a track. First, the bam file aligned to the reference genome may be assessed and corrected for GC bias, to acheive a more even coverage. 
 
@@ -269,7 +269,7 @@ bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --s
 
 There are multiple methods available for normalisation. Recent analysis by [Abrams et al. (2019)](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-019-3247-x#Sec2) advocated TPM as the most effective method. 
 
-### Check correlation of technical and biological replicates
+> Check correlation of technical and biological replicates
 
 The correlation between `bam` files of biological and/or technical replicates can be calculated as a QC step to ensure that the expected replicates positively correlate. Deeptools [multiBamSummary](https://deeptools.readthedocs.io/en/develop/content/tools/multiBamSummary.html) and [plotCorrelation](https://deeptools.readthedocs.io/en/develop/content/tools/plotCorrelation.html) are useful tools for further investigation.
 

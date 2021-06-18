@@ -147,7 +147,7 @@ For compatibility with the STAR quantification, the `--quantMode TranscriptomeSA
 
 At this stage, if samples have been sequenced across multiple lanes, the sample files can be combined using `samtools merge`. Various QC tools can be used to assess reproducibility and assess lane effects, such as `deeptools plotCorrelation`. The `salmon` quantification does not require files to be merged, since multiple `bam` files can be listed in the command. However, to visualise the RNA-seq data from the combined technical replicates, `bam` files can be merged at this stage. For example, if your sample was split across lanes 1, 2 and 3 (`L001`, `L002`, `L003`):
 
-```
+```bash
 samtools merge <sample>-merged.bam <sample>_L001.bam <sample>_L002.bam <sample>_L003.bam
 ```
 
@@ -173,13 +173,30 @@ Qualimap will provide several measures of quality, including how many reads have
 ```bash
 #Sort the output bam file. The suffix of the .bam input file may be .gzAligned.out.bam, or -merged.bam. Edit this code to include the appropriate file name.
 samtools sort <sample>.bam > <sample>-sorted.bam
-
 samtools index <sample>-sorted.bam
+
+samtools flagstat <sample>-sorted.bam > <sample>-sorted.flagstat
 
 #Run qualimap to generate QC reports
 qualimap bamqc -bam <sample>-sorted.bam -gff gencode.v36.annotation.gtf -outdir <sample>-bamqc-qualimap-report --java-mem-size=16G
 
 qualimap rnaseq -bam <sample>-sorted.bam -gtf gencode.v36.annotation.gtf -outdir <sample>-rnaseq-qualimap-report --java-mem-size=16G
+```
+
+![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC value:** the percentage of reads aligned to exons can be extracted as follows: 
+
+```bash
+cat <sample>-qualimap-rnaseq/rnaseq_qc_results.txt | grep exonic | cut -d '(' -f 2 | cut -d ')' -f1
+```
+
+![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC value:** the number of aligned reads and aligned reads which were properly paired can be extracted as follows:
+
+```bash
+#The total number of reads mapped
+cat <sample>.flagstat | grep mapped | head -n1 | cut -d ' ' -f1
+
+#The total number of properly paired reads
+cat ../bam_files/061818_con.flagstat | grep 'properly paired' | head -n1 | cut -d ' ' -f1
 ```
 
 Qualimap `multi-bamqc` can then run QC on combined samples and replicates. This includes principal component analysis (PCA) to confirm whether technical and/or biological replicates cluster together. A text file (`samples.txt`) should be created with three columns, the first with the sample ID, the second with the full path to the bamqc results and the third with the group names. 
@@ -232,13 +249,13 @@ The `bam` file aligned to the *genome* should be converted to a `bigWig` format,
 
 The gene counts are here normalised to TPM values during conversion. 
 
-```
+```bash
 bamCoverage -b <sample>.gc_corrected.bam -o <sample>.bw --normalizeUsing BPM --samFlagExclude 512
 ```
 
 Biological replicates can also be merged and a bigWig file generated for the combined sample.
 
-```
+```bash
 bamCompare -b <sample>_1.bam
 ```
 

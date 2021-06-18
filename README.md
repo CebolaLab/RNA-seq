@@ -38,7 +38,7 @@ fastqc <sample>_2.fastq.gz -d . -o .
 
 These fastQC reports can be combined into one summary report using [multiQC](https://multiqc.info/). 
 
-![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) **QC metric**: To extract the total number of reads from the fastQC report, run the following code (replacing <sample> with your file name).
+To extract the total number of reads from the fastQC report, run the following code (replacing <sample> with your file name).
 
 ```bash
 totalreads=$(unzip -c <sample>_fastqc.zip <sample>_fastqc/fastqc_data.txt | grep 'Total Sequences' | cut -f 2)

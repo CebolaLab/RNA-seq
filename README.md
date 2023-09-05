@@ -1,4 +1,4 @@
-# RNA-seq
+# RNA-seq: A step-by-step analysis pipeline.
 
 A step-by-step analysis pipeline for RNA-seq data from the [Cebola Lab](https://www.imperial.ac.uk/metabolism-digestion-reproduction/research/systems-medicine/genetics--genomics/regulatory-genomics-and-metabolic-disease/).
 
